@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>David & Ixi · Task Tracker</title>
+<title>Team Task Tracker</title>
 <style>
 :root{--bg:#f6f5f2;--card:#fff;--ink:#1f2124;--mut:#7b7f87;--line:#e8e6e1;--acc:#4f46e5;--accs:#eef0ff;
 --todo:#8a8f98;--todos:#f0f1f3;--prog:#d97706;--progs:#fff4e0;--done:#16a34a;--dones:#e6f6ec;--d:#4f46e5;--i:#db2777;
@@ -14,7 +14,7 @@ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:en
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
-.wrap{max-width:860px;margin:0 auto;padding:28px 18px 90px}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 18px 90px}
 h1{font-size:22px;margin:0;letter-spacing:-.3px}
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .sub{color:var(--mut);font-size:13px}
@@ -113,6 +113,39 @@ textarea{min-height:64px;resize:vertical}
 .dd-opt:hover{background:var(--accs);color:var(--acc);transform:translateX(4px)}
 .dd-opt.sel{font-weight:600;color:var(--acc)}.dd-opt.sel::after{content:'✓';font-size:13px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.orb{animation:none!important}}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:22px;align-items:start}
+.side{position:sticky;top:20px;margin-top:20px}
+.legend{background:color-mix(in srgb,var(--card) 80%,transparent);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:18px;padding:16px}
+.legend h3{margin:0 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.lg{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:11px;cursor:pointer;transition:background .2s,transform .25s cubic-bezier(.34,1.56,.64,1)}
+.lg:hover{background:var(--accs);transform:translateX(3px)}
+.lg.act{background:var(--accs);box-shadow:inset 0 0 0 1.5px var(--acc)}
+.lg span{flex:1;font-size:14px}.lg b{font-size:13px;color:var(--mut);font-weight:600}
+.lgc{width:18px;height:18px;border-radius:50%;border:2px solid var(--todo);display:inline-grid;place-items:center;font-size:10px;color:#fff;font-style:normal;flex:none}
+.lgc.progress{border-color:var(--prog);background:linear-gradient(90deg,var(--prog) 50%,transparent 50%)}
+.lgc.done{border-color:var(--done);background:var(--done)}
+.scope{margin:6px 10px 0}
+.pp{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
+.av{width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;color:#fff;font-size:11px;font-weight:700;font-style:normal;flex:none}
+.stack{display:flex;cursor:pointer;padding:3px}
+.stack .av{width:30px;height:30px;font-size:13px;border:2px solid var(--bg);margin-left:-8px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.stack .av:first-child{margin-left:0}.stack:hover .av{transform:translateY(-3px)}
+.pmrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.pmrow span{flex:1}.pmrow .sub{font-size:12px}
+.pmrow button{border:0;background:none;color:var(--mut);cursor:pointer;font-size:18px;padding:0 6px}
+.pmrow button:hover{color:#dc2626}
+.sw{display:flex;gap:8px;flex-wrap:wrap}
+.sw i{width:26px;height:26px;border-radius:50%;cursor:pointer;transition:transform .25s cubic-bezier(.34,1.56,.64,1);box-shadow:0 0 0 2px var(--card)}
+.sw i:hover{transform:scale(1.15)}.sw i.on{box-shadow:0 0 0 2px var(--card),0 0 0 4px currentColor;transform:scale(1.1)}
+.fab{z-index:5;display:flex;align-items:center;gap:8px;border:0;background:linear-gradient(135deg,var(--acc),#a855f7);animation:float 3.2s ease-in-out infinite;font-size:15px}
+.fab::before,.fab::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(135deg,var(--acc),#a855f7);z-index:-1;animation:ring 2.6s cubic-bezier(.2,.6,.3,1) infinite}
+.fab::after{animation-delay:1.3s}
+.fab .pl{display:inline-block;font-size:18px;line-height:1;transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
+.fab:hover{animation-play-state:paused}.fab:hover .pl{transform:rotate(180deg) scale(1.15)}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-11px)}}
+@keyframes ring{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.55,2.1);opacity:0}}
+@media(max-width:860px){.layout{grid-template-columns:1fr}.side{position:static;order:-1;margin-top:16px}.pp{display:none}.legend{display:flex;flex-wrap:wrap;gap:4px}.legend h3,.scope{display:none}.lg{padding:6px 10px}}
 </style>
 </head>
 <body>
@@ -120,13 +153,14 @@ textarea{min-height:64px;resize:vertical}
 <div class="orbs"><i class="orb o1"></i><i class="orb o2"></i><i class="orb o3"></i></div><canvas id="bg"></canvas>
 <div class="wrap">
   <div class="top">
-    <div><h1>Task Tracker</h1><div class="sub">David &amp; Ixi · weekly, Monday to Friday</div></div>
+    <div><h1>Task Tracker</h1><div class="sub">Team tracker · weekly, Monday to Friday</div></div>
     <div style="display:flex;gap:8px;align-items:center">
-      <span class="sub" id="me"></span>
+      <div class="stack" id="stack" title="Manage people"></div>
       <button class="btn" id="theme" title="Toggle theme">◐</button>
     </div>
   </div>
 
+  <div class="layout"><div class="mc">
   <div class="hero">
     <div class="nav">
       <button class="btn arrow" id="prev">‹</button>
@@ -143,21 +177,40 @@ textarea{min-height:64px;resize:vertical}
     <select id="mSel"></select><select id="ySel"></select>
     <button class="btn" id="todayBtn">This week</button>
     <span class="sp"></span>
-    <select id="fWho"><option value="">Everyone</option><option>David</option><option>Ixi</option></select>
+    <select id="fWho"><option value="">Everyone</option></select>
     <select id="fSt"><option value="">All status</option><option value="todo">Not started</option><option value="progress">In progress</option><option value="done">Done</option></select>
   </div>
 
   <div id="list"></div>
+  </div>
+  <aside class="side"><div class="legend">
+    <h3>Legend</h3>
+    <div class="lg" data-st="done"><i class="lgc done">✓</i><span>Complete</span><b id="cDone">0</b></div>
+    <div class="lg" data-st="progress"><i class="lgc progress"></i><span>In progress</span><b id="cProg">0</b></div>
+    <div class="lg" data-st="todo"><i class="lgc todo"></i><span>Not yet started</span><b id="cTodo">0</b></div>
+    <div class="sub scope" id="scope"></div>
+    <div class="pp"><h3>People</h3><div id="pplist"></div>
+    <button class="btn" id="addPerson" style="width:100%;margin-top:8px">＋ Add person</button></div>
+  </div></aside>
+  </div>
   <div class="note" id="syncNote">Connecting…</div>
 </div>
 
-<button class="btn p fab" id="add">＋ New task</button>
+<button class="btn p fab" id="add"><span class="pl">＋</span> New task</button>
+
+<div class="ov" id="pov"><div class="modal">
+  <h2>People</h2>
+  <div id="pm"></div>
+  <div><label>Add someone</label><input type="text" id="pName" placeholder="Name"></div>
+  <div><label>Color</label><div class="sw" id="sw"></div></div>
+  <div class="acts"><button class="btn" id="pClose">Done</button><button class="btn p" id="pAdd">Add person</button></div>
+</div></div>
 
 <div class="ov" id="ov"><div class="modal">
   <h2>New task</h2>
   <div><label>Task</label><input type="text" id="nTitle" placeholder="What needs to be done?"></div>
   <div class="g2">
-    <div><label>Set up by</label><select id="nBy"><option>David</option><option>Ixi</option></select></div>
+    <div><label>Set up by</label><select id="nBy"></select></div>
     <div><label>Status</label><select id="nSt"><option value="todo">Not started</option><option value="progress">In progress</option><option value="done">Done</option></select></div>
   </div>
   <div class="g2">
@@ -182,6 +235,12 @@ const short=d=>MON[d.getMonth()].slice(0,3)+' '+d.getDate();
 const rangeLabel=m=>{const f=addD(m,4);return MON[m.getMonth()].slice(0,3)+' '+m.getDate()+' – '+(f.getMonth()!==m.getMonth()?MON[f.getMonth()].slice(0,3)+' ':'')+f.getDate()};
 const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
+const PAL=['#4f46e5','#db2777','#0891b2','#16a34a','#d97706','#7c3aed','#e11d48','#0d9488','#2563eb','#ea580c'];
+const DEF=[{id:'david',name:'David',color:'#4f46e5',created:1},{id:'ixi',name:'Ixi',color:'#db2777',created:2}];
+let people;try{people=JSON.parse(localStorage.getItem('pp')||'null')}catch(e){}
+if(!people||!people.length)people=DEF.slice();
+let seeded=false,pColor=PAL[2];
+const colorOf=n=>{const p=people.find(x=>x.name===n);return p?p.color:'#9a9ea7'};
 let ci=0,enter=false,ddMenu=null,ddOpen=null;
 let tasks=[],cur=monday(new Date()),view='week',open=null;
 const thisMon=iso(monday(new Date()));
@@ -191,14 +250,17 @@ const DB='https://tasktracker-1f27f-default-rtdb.firebaseio.com';
 let busy=0,ok=false;
 function err(m){const n=$('syncNote');n.textContent=m;n.style.color='#dc2626'}
 function good(){const n=$('syncNote');n.textContent='● Shared with Firebase · updates every few seconds';n.style.color=''}
-function cache(){try{localStorage.setItem('tt',JSON.stringify(tasks))}catch(e){}}
+function cache(){try{localStorage.setItem('tt',JSON.stringify(tasks));localStorage.setItem('pp',JSON.stringify(people))}catch(e){}}
 async function load(){
   if(busy)return;
   const a=document.activeElement;
   if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&!a.closest('.hero,.tools'))return;
-  if($('ov').classList.contains('show')||ddMenu)return;
+  if($('ov').classList.contains('show')||$('pov').classList.contains('show')||ddMenu)return;
   try{
-    const r=await fetch(DB+'/tasks.json');
+    const [r,rp]=await Promise.all([fetch(DB+'/tasks.json'),fetch(DB+'/people.json')]);
+    if(rp.ok){const po=await rp.json();
+      if(po)people=Object.entries(po).map(([id,v])=>({id,...v})).sort((a,b)=>(a.created||0)-(b.created||0));
+      else if(!seeded){seeded=true;people=DEF.slice();people.forEach(savePerson)}}
     if(!r.ok)throw new Error(r.status===401?'Permission denied. Check your Firebase rules.':'HTTP '+r.status);
     const o=await r.json()||{};
     tasks=Object.entries(o).map(([id,v])=>({id,...v}));ok=true;cache();render();good();
@@ -211,6 +273,9 @@ async function save(t){
   catch(e){err('Could not save: '+e.message)}
   busy--;
 }
+async function savePerson(p){const {id,...d}=p;busy++;
+  try{const r=await fetch(DB+'/people/'+id+'.json',{method:'PUT',body:JSON.stringify(d)});if(!r.ok)throw new Error('HTTP '+r.status)}catch(e){err('Could not save person: '+e.message)}busy--;cache()}
+async function removePerson(id){busy++;try{await fetch(DB+'/people/'+id+'.json',{method:'DELETE'})}catch(e){err('Could not remove: '+e.message)}busy--;cache()}
 async function remove(id){
   tasks=tasks.filter(x=>x.id!==id);cache();busy++;
   try{await fetch(DB+'/tasks/'+id+'.json',{method:'DELETE'})}catch(e){err('Could not delete: '+e.message)}
@@ -296,7 +361,7 @@ function render(){
   document.querySelectorAll('#view button').forEach(x=>x.classList.toggle('on',x.dataset.v===view));
   ci=0;$('list').innerHTML=view==='week'?weekHTML(key):monthHTML();
   $('list').classList.toggle('enter',enter);enter=false;
-  bind();enhanceAll();placeSeg();
+  sideUI();bind();enhanceAll();placeSeg();
 }
 function weekHTML(key){
   const a=filt(tasks.filter(t=>t.week===key)).sort((x,y)=>(x.created||0)-(y.created||0));
@@ -325,14 +390,14 @@ function card(t){
     <div class="main" data-open="${t.id}">
       <div class="t">${esc(t.title)}</div>
       <div class="meta"><span class="pill s-${t.status}">${ST[t.status]}</span>
-        <span class="who"><i class="dot" style="background:var(--${t.by==='Ixi'?'i':'d'})"></i>${esc(t.by)}</span>
+        <span class="who"><i class="dot" style="background:${colorOf(t.by)}"></i>${esc(t.by)}</span>
         ${t.due?`<span class="has">⏱ ${short(parse(t.due))}</span>`:''}
         ${t.notes?'<span class="has">📝</span>':''}${t.followup?'<span class="has">💬 follow-up</span>':''}${t.link?'<span class="has">🔗</span>':''}
       </div></div>
   </div>
   ${o?`<div class="detail">
     <div><label>Title</label><input type="text" data-f="title" value="${esc(t.title)}"></div>
-    <div class="g2"><div><label>Set up by</label><select data-f="by"><option ${t.by==='David'?'selected':''}>David</option><option ${t.by==='Ixi'?'selected':''}>Ixi</option></select></div>
+    <div class="g2"><div><label>Set up by</label><select data-f="by">${personOpts(t.by)}</select></div>
     <div><label>Status</label><select data-f="status">${Object.entries(ST).map(([k,v])=>`<option value="${k}" ${t.status===k?'selected':''}>${v}</option>`).join('')}</select></div></div>
     <div class="g2"><div><label>Deadline</label><input type="date" data-f="due" value="${esc(t.due)}"></div>
     <div><label>Link</label><input type="url" data-f="link" value="${esc(t.link)}" placeholder="https://"></div></div>
@@ -375,10 +440,60 @@ $('save').onclick=async()=>{
 };
 document.addEventListener('keydown',e=>{if(e.key==='Escape')ov.classList.remove('show')});
 
+/* ---------- legend + people ---------- */
+function personOpts(sel){const n=people.map(p=>p.name);if(sel&&!n.includes(sel))n.push(sel);return n.map(x=>`<option ${x===sel?'selected':''}>${esc(x)}</option>`).join('')}
+function scopeTasks(){
+  if(view==='week')return tasks.filter(t=>t.week===iso(cur));
+  const m=cur.getMonth(),y=cur.getFullYear(),k=[];let d=monday(new Date(y,m,1));
+  if(d<new Date(y,m,1)&&d.getMonth()!==m)d=addD(d,7);
+  for(;d.getMonth()===m&&d.getFullYear()===y;d=addD(d,7))k.push(iso(d));
+  return tasks.filter(t=>k.includes(t.week));
+}
+function fillSel2(id,html,first){const el=$(id),v=el.value;el.innerHTML=html;el.value=[...el.options].some(o=>o.value===v)?v:(first??el.options[0].value);if(el._dd)refreshDD(el)}
+function sideUI(){
+  const sc=scopeTasks(),c={todo:0,progress:0,done:0};sc.forEach(t=>c[t.status]++);
+  $('cDone').textContent=c.done;$('cProg').textContent=c.progress;$('cTodo').textContent=c.todo;
+  $('scope').textContent='Counts for this '+view;
+  const fs=$('fSt').value,fw=$('fWho').value;
+  document.querySelectorAll('.lg[data-st]').forEach(r=>r.classList.toggle('act',r.dataset.st===fs));
+  $('pplist').innerHTML=people.map(p=>`<div class="lg ${fw===p.name?'act':''}" data-who="${esc(p.name)}"><i class="av" style="background:${p.color}">${esc(p.name.charAt(0).toUpperCase())}</i><span>${esc(p.name)}</span><b>${sc.filter(t=>t.by===p.name).length}</b></div>`).join('');
+  $('stack').innerHTML=people.slice(0,5).map(p=>`<i class="av" title="${esc(p.name)}" style="background:${p.color}">${esc(p.name.charAt(0).toUpperCase())}</i>`).join('')+(people.length>5?`<i class="av" style="background:var(--mut)">+${people.length-5}</i>`:'');
+  const opts=people.map(p=>`<option>${esc(p.name)}</option>`).join('');
+  fillSel2('fWho','<option value="">Everyone</option>'+opts,'');
+  fillSel2('nBy',opts);
+  document.querySelectorAll('.lg[data-st]').forEach(r=>r.onclick=()=>{$('fSt').value=fs===r.dataset.st?'':r.dataset.st;refreshDD($('fSt'));render()});
+  document.querySelectorAll('.lg[data-who]').forEach(r=>r.onclick=()=>{$('fWho').value=fw===r.dataset.who?'':r.dataset.who;refreshDD($('fWho'));render()});
+}
+const pov=$('pov');
+function renderPM(){
+  $('pm').innerHTML=people.map(p=>`<div class="pmrow"><i class="av" style="background:${p.color}">${esc(p.name.charAt(0).toUpperCase())}</i><span>${esc(p.name)}</span><span class="sub" style="flex:none">${tasks.filter(t=>t.by===p.name).length} tasks</span><button data-rm="${p.id}" title="Remove">×</button></div>`).join('');
+  $('sw').innerHTML=PAL.map(c=>`<i data-c="${c}" class="${c===pColor?'on':''}" style="background:${c};color:${c}"></i>`).join('');
+  $('pm').querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{
+    if(people.length<2){alert('Keep at least one person.');return}
+    const p=people.find(x=>x.id===b.dataset.rm);
+    if(confirm('Remove '+p.name+'? Their existing tasks stay, shown in grey.')){people=people.filter(x=>x.id!==p.id);removePerson(p.id);sideUI();renderPM()}});
+  $('sw').querySelectorAll('[data-c]').forEach(i=>i.onclick=()=>{pColor=i.dataset.c;renderPM()});
+}
+function openPeople(){pColor=PAL.find(c=>!people.some(p=>p.color===c))||PAL[people.length%PAL.length];renderPM();pov.classList.add('show');setTimeout(()=>$('pName').focus(),50)}
+$('addPerson').onclick=openPeople;$('stack').onclick=openPeople;
+$('pClose').onclick=()=>pov.classList.remove('show');
+pov.onclick=e=>{if(e.target===pov)pov.classList.remove('show')};
+async function addPerson(){
+  const n=$('pName').value.trim();if(!n){$('pName').focus();return}
+  if(people.some(p=>p.name.toLowerCase()===n.toLowerCase())){alert(n+' is already on the team.');return}
+  const p={id:'p'+Date.now().toString(36),name:n,color:pColor,created:Date.now()};
+  people.push(p);$('pName').value='';
+  pColor=PAL.find(c=>!people.some(x=>x.color===c))||PAL[people.length%PAL.length];
+  sideUI();renderPM();enhanceAll();savePerson(p);
+}
+$('pAdd').onclick=addPerson;
+$('pName').addEventListener('keydown',e=>{if(e.key==='Enter')addPerson()});
+addEventListener('keydown',e=>{if(e.key==='Escape')pov.classList.remove('show')});
+
 /* ---------- custom dropdowns ---------- */
-const DDC={todo:'--todo',progress:'--prog',done:'--done',David:'--d',Ixi:'--i'};
+const DDC={todo:'--todo',progress:'--prog',done:'--done'};
 function closeDD(){if(ddMenu){ddMenu.remove();ddMenu=null}if(ddOpen){ddOpen.classList.remove('open');ddOpen=null}}
-function dotH(v){return DDC[v]?`<i class="dot" style="background:var(${DDC[v]})"></i>`:''}
+function dotH(v){const c=DDC[v]?`var(${DDC[v]})`:(people.find(p=>p.name===v)||{}).color;return c?`<i class="dot" style="background:${c}"></i>`:''}
 function refreshDD(sel){const w=sel._dd;if(!w)return;const o=sel.options[sel.selectedIndex];w.querySelector('.lbl').innerHTML=dotH(sel.value)+esc(o?o.textContent:'')}
 function enhance(sel){
   if(sel._dd){refreshDD(sel);return}
