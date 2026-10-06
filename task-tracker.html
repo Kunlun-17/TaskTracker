@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>David & Ixi · Task Tracker</title>
+<style>
+:root{--bg:#f6f5f2;--card:#fff;--ink:#1f2124;--mut:#7b7f87;--line:#e8e6e1;--acc:#4f46e5;--accs:#eef0ff;
+--todo:#8a8f98;--todos:#f0f1f3;--prog:#d97706;--progs:#fff4e0;--done:#16a34a;--dones:#e6f6ec;--d:#4f46e5;--i:#db2777;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15161a;--card:#1e2025;--ink:#ececee;--mut:#9a9ea7;--line:#2c2e35;--accs:#26284a;--todos:#2a2c32;--progs:#3a2d14;--dones:#16301f;--acc:#8b87ff}}
+:root[data-theme="dark"]{--bg:#15161a;--card:#1e2025;--ink:#ececee;--mut:#9a9ea7;--line:#2c2e35;--accs:#26284a;--todos:#2a2c32;--progs:#3a2d14;--dones:#16301f;--acc:#8b87ff}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:28px 18px 90px}
+h1{font-size:22px;margin:0;letter-spacing:-.3px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.sub{color:var(--mut);font-size:13px}
+button,select,input,textarea{font:inherit;color:inherit}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 14px;cursor:pointer}
+.btn:hover{border-color:var(--acc)}
+.btn.p{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.hero{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;margin-top:20px}
+.nav{display:flex;align-items:center;gap:10px}
+.nav .arrow{width:38px;height:38px;border-radius:50%;padding:0;font-size:18px}
+.wk{flex:1;text-align:center}
+.wk b{display:block;font-size:24px;letter-spacing:-.5px}
+.badge{display:inline-block;font-size:12px;padding:2px 10px;border-radius:99px;background:var(--accs);color:var(--acc);font-weight:600;margin-top:4px}
+.badge.off{background:var(--todos);color:var(--mut)}
+.days{display:flex;gap:6px;margin-top:16px}
+.day{flex:1;text-align:center;padding:6px 0;border-radius:10px;font-size:12px;color:var(--mut);background:var(--bg)}
+.day b{display:block;font-size:15px;color:var(--ink)}
+.day.today{background:var(--acc);color:#fff}.day.today b{color:#fff}
+.bar{height:6px;border-radius:9px;background:var(--line);margin-top:16px;overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.stats{display:flex;gap:16px;margin-top:8px;font-size:12px;color:var(--mut);flex-wrap:wrap}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 12px;align-items:center}
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{border:0;background:none;padding:5px 12px;border-radius:7px;cursor:pointer;color:var(--mut)}
+.seg button.on{background:var(--accs);color:var(--acc);font-weight:600}
+select{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:7px 10px}
+.sp{flex:1}
+.task{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px}
+.row{display:flex;gap:12px;align-items:flex-start}
+.chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--todo);flex:none;margin-top:2px;cursor:pointer;display:grid;place-items:center;background:none;padding:0;font-size:12px;color:#fff}
+.chk.progress{border-color:var(--prog);background:linear-gradient(90deg,var(--prog) 50%,transparent 50%)}
+.chk.done{border-color:var(--done);background:var(--done)}
+.main{flex:1;min-width:0;cursor:pointer}
+.t{font-weight:600;word-break:break-word}
+.done .t,.task.isdone .t{color:var(--mut);text-decoration:line-through}
+.meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center}
+.pill{font-size:12px;border-radius:99px;padding:2px 10px;font-weight:600}
+.s-todo{background:var(--todos);color:var(--todo)}.s-progress{background:var(--progs);color:var(--prog)}.s-done{background:var(--dones);color:var(--done)}
+.who{font-size:12px;color:var(--mut);display:flex;align-items:center;gap:5px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.has{font-size:12px;color:var(--mut)}
+.detail{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);display:grid;gap:10px}
+label{font-size:12px;color:var(--mut);font-weight:600;display:block;margin-bottom:3px}
+input[type=text],input[type=url],input[type=date],textarea,.detail select,.modal select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+textarea{min-height:64px;resize:vertical}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fu{background:var(--accs);border-radius:10px;padding:10px}
+.fu textarea{background:var(--card)}
+.acts{display:flex;justify-content:space-between;gap:8px}
+.del{color:#dc2626;border-color:transparent;background:none}
+.wkh{display:flex;justify-content:space-between;align-items:baseline;margin:22px 0 8px;cursor:pointer}
+.wkh b{font-size:15px}.wkh span{font-size:12px;color:var(--mut)}
+.empty{text-align:center;color:var(--mut);padding:40px 10px;border:1.5px dashed var(--line);border-radius:14px}
+.fab{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 8px 24px rgba(79,70,229,.35);border-radius:99px;padding:12px 20px}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:9}
+.ov.show{display:flex}
+.modal{background:var(--card);border-radius:18px;padding:22px;width:100%;max-width:480px;display:grid;gap:12px;max-height:92%;overflow:auto}
+.modal h2{margin:0;font-size:18px}
+.note{font-size:12px;color:var(--mut);text-align:center;margin-top:30px}
+@media(max-width:520px){.g2{grid-template-columns:1fr}.wk b{font-size:19px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><h1>Task Tracker</h1><div class="sub">David &amp; Ixi · weekly, Monday to Friday</div></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span class="sub" id="me"></span>
+      <button class="btn" id="theme" title="Toggle theme">◐</button>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="nav">
+      <button class="btn arrow" id="prev">‹</button>
+      <div class="wk"><b id="wkTitle"></b><span class="badge" id="wkBadge"></span></div>
+      <button class="btn arrow" id="next">›</button>
+    </div>
+    <div class="days" id="days"></div>
+    <div class="bar" id="bar"></div>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="tools">
+    <div class="seg" id="view"><button data-v="week" class="on">Week</button><button data-v="month">Month</button></div>
+    <select id="mSel"></select><select id="ySel"></select>
+    <button class="btn" id="todayBtn">This week</button>
+    <span class="sp"></span>
+    <select id="fWho"><option value="">Everyone</option><option>David</option><option>Ixi</option></select>
+    <select id="fSt"><option value="">All status</option><option value="todo">Not started</option><option value="progress">In progress</option><option value="done">Done</option></select>
+  </div>
+
+  <div id="list"></div>
+  <div class="note" id="syncNote">Connecting…</div>
+</div>
+
+<button class="btn p fab" id="add">＋ New task</button>
+
+<div class="ov" id="ov"><div class="modal">
+  <h2>New task</h2>
+  <div><label>Task</label><input type="text" id="nTitle" placeholder="What needs to be done?"></div>
+  <div class="g2">
+    <div><label>Set up by</label><select id="nBy"><option>David</option><option>Ixi</option></select></div>
+    <div><label>Status</label><select id="nSt"><option value="todo">Not started</option><option value="progress">In progress</option><option value="done">Done</option></select></div>
+  </div>
+  <div class="g2">
+    <div><label>Week (pick any day)</label><input type="date" id="nDate"></div>
+    <div><label>Deadline (optional)</label><input type="date" id="nDue"></div>
+  </div>
+  <div><label>Link (optional)</label><input type="url" id="nLink" placeholder="https://"></div>
+  <div><label>Notes</label><textarea id="nNotes"></textarea></div>
+  <div class="acts"><button class="btn" id="cancel">Cancel</button><button class="btn p" id="save">Add task</button></div>
+</div></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const ST={todo:'Not started',progress:'In progress',done:'Done'};
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
+const monday=d=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());const w=(x.getDay()+6)%7;x.setDate(x.getDate()-w);return x};
+const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const short=d=>MON[d.getMonth()].slice(0,3)+' '+d.getDate();
+const rangeLabel=m=>{const f=addD(m,4);return MON[m.getMonth()].slice(0,3)+' '+m.getDate()+' – '+(f.getMonth()!==m.getMonth()?MON[f.getMonth()].slice(0,3)+' ':'')+f.getDate()};
+const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let tasks=[],cur=monday(new Date()),view='week',open=null;
+const thisMon=iso(monday(new Date()));
+
+/* ---------- storage: Firebase Realtime Database (REST) ---------- */
+const DB='https://tasktracker-1f27f-default-rtdb.firebaseio.com';
+let busy=0,ok=false;
+function err(m){const n=$('syncNote');n.textContent=m;n.style.color='#dc2626'}
+function good(){const n=$('syncNote');n.textContent='● Shared with Firebase · updates every few seconds';n.style.color=''}
+function cache(){try{localStorage.setItem('tt',JSON.stringify(tasks))}catch(e){}}
+async function load(){
+  if(busy)return;
+  const a=document.activeElement;
+  if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&!a.closest('.hero,.tools'))return;
+  if($('ov').classList.contains('show'))return;
+  try{
+    const r=await fetch(DB+'/tasks.json');
+    if(!r.ok)throw new Error(r.status===401?'Permission denied. Check your Firebase rules.':'HTTP '+r.status);
+    const o=await r.json()||{};
+    tasks=Object.entries(o).map(([id,v])=>({id,...v}));ok=true;cache();render();good();
+  }catch(e){err('Cannot reach Firebase: '+e.message)}
+}
+async function save(t){
+  const i=tasks.findIndex(x=>x.id===t.id);if(i>=0)tasks[i]=t;else tasks.push(t);cache();
+  const {id,...data}=t;busy++;
+  try{const r=await fetch(DB+'/tasks/'+id+'.json',{method:'PUT',body:JSON.stringify(data)});if(!r.ok)throw new Error(r.status===401?'Permission denied. Check your Firebase rules.':'HTTP '+r.status);good()}
+  catch(e){err('Could not save: '+e.message)}
+  busy--;
+}
+async function remove(id){
+  tasks=tasks.filter(x=>x.id!==id);cache();busy++;
+  try{await fetch(DB+'/tasks/'+id+'.json',{method:'DELETE'})}catch(e){err('Could not delete: '+e.message)}
+  busy--;
+}
+window.addEventListener('error',e=>err('Error: '+e.message));
+try{tasks=JSON.parse(localStorage.getItem('tt')||'[]')}catch(e){}
+render();load();setInterval(load,4000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
+
+/* ---------- selectors ---------- */
+function fillSel(){
+  $('mSel').innerHTML=MON.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+  const y0=new Date().getFullYear();let ys='';for(let y=y0-2;y<=y0+2;y++)ys+=`<option>${y}</option>`;
+  $('ySel').innerHTML=ys;
+}
+fillSel();
+function syncSel(){
+  // weeks belong to the month of their Thursday-neutral midpoint: use Monday's month for simplicity
+  $('mSel').value=cur.getMonth();$('ySel').value=cur.getFullYear();
+}
+function jump(){
+  const y=+$('ySel').value,m=+$('mSel').value;
+  cur=monday(new Date(y,m,1));
+  if(cur.getMonth()!==m&&cur<new Date(y,m,1))cur=addD(cur,7);
+  render();
+}
+$('mSel').onchange=jump;$('ySel').onchange=jump;
+$('prev').onclick=()=>{cur=addD(cur,-7);render()};
+$('next').onclick=()=>{cur=addD(cur,7);render()};
+$('todayBtn').onclick=()=>{cur=monday(new Date());view='week';render()};
+$('view').onclick=e=>{const v=e.target.dataset.v;if(v){view=v;render()}};
+$('fWho').onchange=render;$('fSt').onchange=render;
+
+/* ---------- rendering ---------- */
+function filt(a){const w=$('fWho').value,s=$('fSt').value;return a.filter(t=>(!w||t.by===w)&&(!s||t.status===s))}
+function render(){
+  const key=iso(cur),isNow=key===thisMon;
+  $('wkTitle').textContent=rangeLabel(cur)+', '+addD(cur,4).getFullYear();
+  const b=$('wkBadge');
+  b.textContent=isNow?'● This week':(key<thisMon?'Past week':'Upcoming week');
+  b.className='badge'+(isNow?'':' off');
+  const td=iso(new Date());
+  $('days').innerHTML=['Mon','Tue','Wed','Thu','Fri'].map((n,i)=>{const d=addD(cur,i);return `<div class="day ${iso(d)===td?'today':''}">${n}<b>${d.getDate()}</b></div>`}).join('');
+  const wk=tasks.filter(t=>t.week===key);
+  const c={todo:0,progress:0,done:0};wk.forEach(t=>c[t.status]++);
+  const n=wk.length||1;
+  $('bar').innerHTML=`<i style="width:${c.done/n*100}%;background:var(--done)"></i><i style="width:${c.progress/n*100}%;background:var(--prog)"></i>`;
+  $('stats').innerHTML=wk.length?`<span>${c.done} of ${wk.length} done</span><span>${c.progress} in progress</span><span>${c.todo} not started</span>`:'<span>No tasks yet this week</span>';
+  syncSel();
+  document.querySelectorAll('#view button').forEach(x=>x.classList.toggle('on',x.dataset.v===view));
+  $('list').innerHTML=view==='week'?weekHTML(key):monthHTML();
+  bind();
+}
+function weekHTML(key){
+  const a=filt(tasks.filter(t=>t.week===key)).sort((x,y)=>(x.created||0)-(y.created||0));
+  return a.length?a.map(card).join(''):`<div class="empty">Nothing here yet.<br>Tap <b>＋ New task</b> to add one.</div>`;
+}
+function monthHTML(){
+  const m=cur.getMonth(),y=cur.getFullYear();
+  const mons=[];let d=monday(new Date(y,m,1));
+  if(d<new Date(y,m,1)&&d.getMonth()!==m)d=addD(d,7);
+  for(;d.getMonth()===m&&d.getFullYear()===y;d=addD(d,7))mons.push(new Date(d));
+  const all=filt(tasks.filter(t=>mons.some(w=>iso(w)===t.week)));
+  const done=all.filter(t=>t.status==='done').length;
+  let h=`<div class="sub" style="margin:4px 0 0">${MON[m]} ${y} · ${all.length} tasks · ${done} done</div>`;
+  mons.forEach(w=>{
+    const a=filt(tasks.filter(t=>t.week===iso(w)));
+    h+=`<div class="wkh" data-go="${iso(w)}"><b>${rangeLabel(w)}${iso(w)===thisMon?' · this week':''}</b><span>${a.length} task${a.length===1?'':'s'}</span></div>`;
+    h+=a.length?a.map(card).join(''):'<div class="sub" style="margin-bottom:8px">—</div>';
+  });
+  return h;
+}
+function card(t){
+  const o=open===t.id;
+  return `<div class="task ${t.status==='done'?'isdone':''}" data-id="${t.id}">
+  <div class="row">
+    <button class="chk ${t.status}" data-cyc="${t.id}" title="Change status">${t.status==='done'?'✓':''}</button>
+    <div class="main" data-open="${t.id}">
+      <div class="t">${esc(t.title)}</div>
+      <div class="meta"><span class="pill s-${t.status}">${ST[t.status]}</span>
+        <span class="who"><i class="dot" style="background:var(--${t.by==='Ixi'?'i':'d'})"></i>${esc(t.by)}</span>
+        ${t.due?`<span class="has">⏱ ${short(parse(t.due))}</span>`:''}
+        ${t.notes?'<span class="has">📝</span>':''}${t.followup?'<span class="has">💬 follow-up</span>':''}${t.link?'<span class="has">🔗</span>':''}
+      </div></div>
+  </div>
+  ${o?`<div class="detail">
+    <div><label>Title</label><input type="text" data-f="title" value="${esc(t.title)}"></div>
+    <div class="g2"><div><label>Set up by</label><select data-f="by"><option ${t.by==='David'?'selected':''}>David</option><option ${t.by==='Ixi'?'selected':''}>Ixi</option></select></div>
+    <div><label>Status</label><select data-f="status">${Object.entries(ST).map(([k,v])=>`<option value="${k}" ${t.status===k?'selected':''}>${v}</option>`).join('')}</select></div></div>
+    <div class="g2"><div><label>Deadline</label><input type="date" data-f="due" value="${esc(t.due)}"></div>
+    <div><label>Link</label><input type="url" data-f="link" value="${esc(t.link)}" placeholder="https://"></div></div>
+    <div><label>Notes</label><textarea data-f="notes">${esc(t.notes)}</textarea></div>
+    <div class="fu"><label>Follow-up</label><textarea data-f="followup" placeholder="Questions, feedback, next steps…">${esc(t.followup)}</textarea></div>
+    ${t.link?`<a href="${esc(t.link)}" target="_blank" rel="noopener" class="sub">Open link ↗</a>`:''}
+    <div class="acts"><button class="btn del" data-del="${t.id}">Delete</button><button class="btn" data-open="${t.id}">Close</button></div>
+  </div>`:''}
+  </div>`;
+}
+function bind(){
+  document.querySelectorAll('[data-cyc]').forEach(b=>b.onclick=e=>{e.stopPropagation();const t=tasks.find(x=>x.id===b.dataset.cyc);const o=['todo','progress','done'];t.status=o[(o.indexOf(t.status)+1)%3];save(t);render()});
+  document.querySelectorAll('.main[data-open],button[data-open]').forEach(b=>b.onclick=()=>{open=open===b.dataset.open?null:b.dataset.open;render()});
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(confirm('Delete this task?')){open=null;remove(b.dataset.del);render()}});
+  document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{cur=parse(b.dataset.go);view='week';render()});
+  document.querySelectorAll('.detail [data-f]').forEach(f=>f.onchange=()=>{
+    const id=f.closest('.task').dataset.id;const t=tasks.find(x=>x.id===id);t[f.dataset.f]=f.value;save(t);
+    if(f.tagName==='SELECT')render();
+  });
+}
+
+/* ---------- add task ---------- */
+const ov=$('ov');
+$('add').onclick=()=>{
+  $('nTitle').value='';$('nNotes').value='';$('nLink').value='';$('nDue').value='';
+  $('nDate').value=iso(addD(cur,0));$('nSt').value='todo';
+  ov.classList.add('show');setTimeout(()=>$('nTitle').focus(),50);
+};
+$('cancel').onclick=()=>ov.classList.remove('show');
+ov.onclick=e=>{if(e.target===ov)ov.classList.remove('show')};
+$('save').onclick=async()=>{
+  const title=$('nTitle').value.trim();if(!title){$('nTitle').focus();return}
+  const w=iso(monday(parse($('nDate').value||iso(cur))));
+  const t={id:'t'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),title,by:$('nBy').value,status:$('nSt').value,
+    notes:$('nNotes').value.trim(),followup:'',link:$('nLink').value.trim(),due:$('nDue').value,week:w,created:Date.now()};
+  ov.classList.remove('show');cur=parse(w);view='week';
+  tasks.push(t);render();tasks.pop();
+  try{await save(t)}catch(e){err('Error: '+e.message)}
+  render();
+};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')ov.classList.remove('show')});
+
+/* ---------- theme ---------- */
+$('theme').onclick=()=>{
+  const r=document.documentElement;
+  const dark=r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);
+  r.dataset.theme=dark?'light':'dark';
+};
+</script>
+</body>
+</html>
