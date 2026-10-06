@@ -146,16 +146,43 @@ textarea{min-height:64px;resize:vertical}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-11px)}}
 @keyframes ring{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.55,2.1);opacity:0}}
 @media(max-width:860px){.layout{grid-template-columns:1fr}.side{position:static;order:-1;margin-top:16px}.pp{display:none}.legend{display:flex;flex-wrap:wrap;gap:4px}.legend h3,.scope{display:none}.lg{padding:6px 10px}}
+
+body.locked .wrap,body.locked .fab{display:none}
+.lgn{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;padding:16px}
+.lgn.show{display:flex}
+.lcard{width:100%;max-width:380px;background:color-mix(in srgb,var(--card) 78%,transparent);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);border:1px solid var(--line);border-radius:24px;padding:32px 28px;text-align:center;box-shadow:0 30px 80px rgba(30,30,70,.18);animation:rise .7s cubic-bezier(.2,.9,.25,1.1) both}
+.lcard h2{margin:14px 0 2px;font-size:24px;letter-spacing:-.4px}
+.lcard input{margin-top:12px;padding:12px 14px;font-size:15px}
+.lcard .btn{width:100%;margin-top:16px;padding:12px}
+.lcard.shake{animation:shake .45s}
+@keyframes shake{20%{transform:translateX(-10px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
+.logo{width:54px;height:54px;border-radius:18px;margin:0 auto;display:grid;place-items:center;color:#fff;font-size:26px;background:linear-gradient(135deg,var(--acc),#a855f7);box-shadow:0 10px 30px rgba(79,70,229,.4);animation:float 3.2s ease-in-out infinite}
+.lerr{min-height:18px;margin-top:10px;font-size:13px;color:#dc2626}
+input[type=password]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.acct{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px}
+.acct .av{width:26px;height:26px}
+.rb{font-size:11px;padding:1px 8px;border-radius:99px;background:var(--accs);color:var(--acc);font-weight:600}
+.urow .dd{flex:none;width:150px}
+.urow button{font-size:16px}
 </style>
 </head>
-<body>
+<body class="locked">
 <svg width="0" height="0" style="position:absolute"><defs><filter id="goo"><feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8"/></filter></defs></svg>
 <div class="orbs"><i class="orb o1"></i><i class="orb o2"></i><i class="orb o3"></i></div><canvas id="bg"></canvas>
+<div class="lgn" id="login"><div class="lcard">
+  <div class="logo">✓</div><h2>Welcome back</h2><div class="sub">Sign in to your task tracker</div>
+  <input type="text" id="lu" placeholder="Username" autocomplete="username" autocapitalize="none">
+  <input type="password" id="lp" placeholder="Password" autocomplete="current-password">
+  <div class="lerr" id="lerr"></div>
+  <button class="btn p" id="lbtn">Sign in</button>
+</div></div>
 <div class="wrap">
   <div class="top">
     <div><h1>Task Tracker</h1><div class="sub">Team tracker · weekly, Monday to Friday</div></div>
     <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn" id="usersBtn" style="display:none">Accounts</button>
       <div class="stack" id="stack" title="Manage people"></div>
+      <button class="btn acct" id="acct"></button>
       <button class="btn" id="theme" title="Toggle theme">◐</button>
     </div>
   </div>
@@ -197,6 +224,26 @@ textarea{min-height:64px;resize:vertical}
 </div>
 
 <button class="btn p fab" id="add"><span class="pl">＋</span> New task</button>
+
+<div class="ov" id="uov"><div class="modal" style="max-width:580px">
+  <h2>Accounts</h2>
+  <div class="sub" style="margin-top:-6px">User: sees only their own tasks · Admin: sees everything and adds people · Super admin: also manages accounts</div>
+  <div id="ulist"></div>
+  <div style="border-top:1px dashed var(--line);padding-top:12px;display:grid;gap:10px">
+    <label style="margin:0">New account</label>
+    <div class="g2"><input type="text" id="uName" placeholder="Username" autocapitalize="none"><input type="text" id="uDisp" placeholder="Display name"></div>
+    <div class="g2"><input type="password" id="uPass" placeholder="Password"><select id="uRole"><option value="user">User</option><option value="admin">Admin</option><option value="superadmin">Super admin</option></select></div>
+    <div class="sub" id="uerr" style="color:#dc2626"></div>
+  </div>
+  <div class="acts"><button class="btn" id="uClose">Close</button><button class="btn p" id="uAdd">Create account</button></div>
+</div></div>
+
+<div class="ov" id="aov"><div class="modal">
+  <h2>My account</h2><div id="ainfo" class="sub"></div>
+  <div><label>New password</label><input type="password" id="aPass" placeholder="At least 3 characters"></div>
+  <div class="sub" id="aerr"></div>
+  <div class="acts"><button class="btn" id="aOut">Sign out</button><div style="display:flex;gap:8px"><button class="btn" id="aClose">Close</button><button class="btn p" id="aSave">Change password</button></div></div>
+</div></div>
 
 <div class="ov" id="pov"><div class="modal">
   <h2>People</h2>
@@ -252,12 +299,15 @@ function err(m){const n=$('syncNote');n.textContent=m;n.style.color='#dc2626'}
 function good(){const n=$('syncNote');n.textContent='● Shared with Firebase · updates every few seconds';n.style.color=''}
 function cache(){try{localStorage.setItem('tt',JSON.stringify(tasks));localStorage.setItem('pp',JSON.stringify(people))}catch(e){}}
 async function load(){
-  if(busy)return;
+  if(busy||!me)return;
   const a=document.activeElement;
   if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&!a.closest('.hero,.tools'))return;
   if($('ov').classList.contains('show')||$('pov').classList.contains('show')||ddMenu)return;
   try{
-    const [r,rp]=await Promise.all([fetch(DB+'/tasks.json'),fetch(DB+'/people.json')]);
+    const [r,rp,ru]=await Promise.all([fetch(DB+'/tasks.json'),fetch(DB+'/people.json'),fetch(DB+'/users/'+me.u+'.json')]);
+    const ud=await ru.json();
+    if(!ud||ud.hash!==me.hash){logout();return}
+    if(ud.role!==me.role||ud.name!==me.name){me={u:me.u,...ud};applyRole()}
     if(rp.ok){const po=await rp.json();
       if(po)people=Object.entries(po).map(([id,v])=>({id,...v})).sort((a,b)=>(a.created||0)-(b.created||0));
       else if(!seeded){seeded=true;people=DEF.slice();people.forEach(savePerson)}}
@@ -352,7 +402,7 @@ function render(){
   b.className='badge'+(isNow?'':' off');
   const td=iso(new Date());
   $('days').innerHTML=['Mon','Tue','Wed','Thu','Fri'].map((n,i)=>{const d=addD(cur,i);return `<div class="day ${iso(d)===td?'today':''}">${n}<b>${d.getDate()}</b></div>`}).join('');
-  const wk=tasks.filter(t=>t.week===key);
+  const wk=V().filter(t=>t.week===key);
   const c={todo:0,progress:0,done:0};wk.forEach(t=>c[t.status]++);
   const n=wk.length||1;
   $('bar').innerHTML=`<i style="width:${c.done/n*100}%;background:var(--done)"></i><i style="width:${c.progress/n*100}%;background:var(--prog)"></i>`;
@@ -364,7 +414,7 @@ function render(){
   sideUI();bind();enhanceAll();placeSeg();
 }
 function weekHTML(key){
-  const a=filt(tasks.filter(t=>t.week===key)).sort((x,y)=>(x.created||0)-(y.created||0));
+  const a=filt(V().filter(t=>t.week===key)).sort((x,y)=>(x.created||0)-(y.created||0));
   return a.length?a.map(card).join(''):`<div class="empty">Nothing here yet.<br>Tap <b>＋ New task</b> to add one.</div>`;
 }
 function monthHTML(){
@@ -372,11 +422,11 @@ function monthHTML(){
   const mons=[];let d=monday(new Date(y,m,1));
   if(d<new Date(y,m,1)&&d.getMonth()!==m)d=addD(d,7);
   for(;d.getMonth()===m&&d.getFullYear()===y;d=addD(d,7))mons.push(new Date(d));
-  const all=filt(tasks.filter(t=>mons.some(w=>iso(w)===t.week)));
+  const all=filt(V().filter(t=>mons.some(w=>iso(w)===t.week)));
   const done=all.filter(t=>t.status==='done').length;
   let h=`<div class="sub" style="margin:4px 0 0">${MON[m]} ${y} · ${all.length} tasks · ${done} done</div>`;
   mons.forEach(w=>{
-    const a=filt(tasks.filter(t=>t.week===iso(w)));
+    const a=filt(V().filter(t=>t.week===iso(w)));
     h+=`<div class="wkh" data-go="${iso(w)}"><b>${rangeLabel(w)}${iso(w)===thisMon?' · this week':''}</b><span>${a.length} task${a.length===1?'':'s'}</span></div>`;
     h+=a.length?a.map(card).join(''):'<div class="sub" style="margin-bottom:8px">—</div>';
   });
@@ -397,7 +447,7 @@ function card(t){
   </div>
   ${o?`<div class="detail">
     <div><label>Title</label><input type="text" data-f="title" value="${esc(t.title)}"></div>
-    <div class="g2"><div><label>Set up by</label><select data-f="by">${personOpts(t.by)}</select></div>
+    <div class="g2">${isAdmin()?`<div><label>Set up by</label><select data-f="by">${personOpts(t.by)}</select></div>`:'<div></div>'}
     <div><label>Status</label><select data-f="status">${Object.entries(ST).map(([k,v])=>`<option value="${k}" ${t.status===k?'selected':''}>${v}</option>`).join('')}</select></div></div>
     <div class="g2"><div><label>Deadline</label><input type="date" data-f="due" value="${esc(t.due)}"></div>
     <div><label>Link</label><input type="url" data-f="link" value="${esc(t.link)}" placeholder="https://"></div></div>
@@ -423,7 +473,7 @@ function bind(){
 const ov=$('ov');
 $('add').onclick=()=>{
   $('nTitle').value='';$('nNotes').value='';$('nLink').value='';$('nDue').value='';
-  $('nDate').value=iso(addD(cur,0));$('nSt').value='todo';enhanceAll();
+  $('nDate').value=iso(addD(cur,0));$('nSt').value='todo';if(people.some(p=>p.name===me.name))$('nBy').value=me.name;enhanceAll();$('nBy').parentElement.style.display=isAdmin()?'':'none';
   ov.classList.add('show');setTimeout(()=>$('nTitle').focus(),50);
 };
 $('cancel').onclick=()=>ov.classList.remove('show');
@@ -431,7 +481,7 @@ ov.onclick=e=>{if(e.target===ov)ov.classList.remove('show')};
 $('save').onclick=async()=>{
   const title=$('nTitle').value.trim();if(!title){$('nTitle').focus();return}
   const w=iso(monday(parse($('nDate').value||iso(cur))));
-  const t={id:'t'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),title,by:$('nBy').value,status:$('nSt').value,
+  const t={id:'t'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),title,by:isAdmin()?$('nBy').value:me.name,status:$('nSt').value,
     notes:$('nNotes').value.trim(),followup:'',link:$('nLink').value.trim(),due:$('nDue').value,week:w,created:Date.now()};
   ov.classList.remove('show');cur=parse(w);view='week';
   tasks.push(t);render();tasks.pop();
@@ -443,11 +493,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')ov.classList.remove(
 /* ---------- legend + people ---------- */
 function personOpts(sel){const n=people.map(p=>p.name);if(sel&&!n.includes(sel))n.push(sel);return n.map(x=>`<option ${x===sel?'selected':''}>${esc(x)}</option>`).join('')}
 function scopeTasks(){
-  if(view==='week')return tasks.filter(t=>t.week===iso(cur));
+  if(view==='week')return V().filter(t=>t.week===iso(cur));
   const m=cur.getMonth(),y=cur.getFullYear(),k=[];let d=monday(new Date(y,m,1));
   if(d<new Date(y,m,1)&&d.getMonth()!==m)d=addD(d,7);
   for(;d.getMonth()===m&&d.getFullYear()===y;d=addD(d,7))k.push(iso(d));
-  return tasks.filter(t=>k.includes(t.week));
+  return V().filter(t=>k.includes(t.week));
 }
 function fillSel2(id,html,first){const el=$(id),v=el.value;el.innerHTML=html;el.value=[...el.options].some(o=>o.value===v)?v:(first??el.options[0].value);if(el._dd)refreshDD(el)}
 function sideUI(){
@@ -475,7 +525,7 @@ function renderPM(){
   $('sw').querySelectorAll('[data-c]').forEach(i=>i.onclick=()=>{pColor=i.dataset.c;renderPM()});
 }
 function openPeople(){pColor=PAL.find(c=>!people.some(p=>p.color===c))||PAL[people.length%PAL.length];renderPM();pov.classList.add('show');setTimeout(()=>$('pName').focus(),50)}
-$('addPerson').onclick=openPeople;$('stack').onclick=openPeople;
+$('addPerson').onclick=()=>{if(isAdmin())openPeople()};$('stack').onclick=()=>{if(isAdmin())openPeople()};
 $('pClose').onclick=()=>pov.classList.remove('show');
 pov.onclick=e=>{if(e.target===pov)pov.classList.remove('show')};
 async function addPerson(){
@@ -556,7 +606,130 @@ $('theme').onclick=()=>{
   const dark=r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);
   r.dataset.theme=dark?'light':'dark';
 };
-render();load();setInterval(load,4000);
+/* ---------- accounts & login ---------- */
+function sha256js(str){
+  const b=unescape(encodeURIComponent(str)),w=[],l=b.length*8,pr=[];
+  for(let n=2;pr.length<64;n++)if(pr.every(p=>n%p))pr.push(n);
+  const K=pr.map(p=>Math.floor((Math.cbrt(p)%1)*4294967296));
+  let H=pr.slice(0,8).map(p=>Math.floor((Math.sqrt(p)%1)*4294967296));
+  for(let i=0;i<b.length;i++)w[i>>2]|=b.charCodeAt(i)<<(24-(i%4)*8);
+  w[l>>5]|=0x80<<(24-l%32);w[(((l+64)>>9)<<4)+15]=l;
+  const rr=(x,n)=>(x>>>n)|(x<<(32-n));
+  for(let i=0;i<w.length;i+=16){
+    const a=[];let [A,B,C,D,E,F,G,Hh]=H;
+    for(let t=0;t<64;t++){
+      if(t<16)a[t]=w[i+t]|0;else{const s0=rr(a[t-15],7)^rr(a[t-15],18)^(a[t-15]>>>3),s1=rr(a[t-2],17)^rr(a[t-2],19)^(a[t-2]>>>10);a[t]=(a[t-16]+s0+a[t-7]+s1)|0}
+      const t1=(Hh+(rr(E,6)^rr(E,11)^rr(E,25))+((E&F)^(~E&G))+K[t]+a[t])|0,t2=((rr(A,2)^rr(A,13)^rr(A,22))+((A&B)^(A&C)^(B&C)))|0;
+      Hh=G;G=F;F=E;E=(D+t1)|0;D=C;C=B;B=A;A=(t1+t2)|0}
+    H=[H[0]+A,H[1]+B,H[2]+C,H[3]+D,H[4]+E,H[5]+F,H[6]+G,H[7]+Hh].map(x=>x|0)}
+  return H.map(x=>(x>>>0).toString(16).padStart(8,'0')).join('')}
+const hashPw=(u,p)=>sha256js('tt1:'+u+':'+p);
+const ROLES={user:'User',admin:'Admin',superadmin:'Super admin'};
+let me=null,polling=false;
+const isAdmin=()=>!!me&&me.role!=='user',isSuper=()=>!!me&&me.role==='superadmin';
+const visible=t=>isAdmin()||(!!me&&t.by===me.name);
+const V=()=>tasks.filter(visible);
+async function jget(path){const r=await fetch(DB+path+'.json');if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
+async function jsend(path,method,body){const r=await fetch(DB+path+'.json',{method,body:body===undefined?undefined:JSON.stringify(body)});if(!r.ok)throw new Error('HTTP '+r.status)}
+async function ensurePersonDB(name,id,color,created){if(!(await jget('/people/'+id)))await savePerson({id,name,color,created})}
+async function seedUsers(){
+  for(const [u,n,r] of [['david','David','superadmin'],['ixi','Ixi','admin'],['zoe','Zoe','user']])
+    await jsend('/users/'+u,'PUT',{name:n,role:r,hash:hashPw(u,u),created:Date.now()});
+  await ensurePersonDB('David','david','#4f46e5',1);await ensurePersonDB('Ixi','ixi','#db2777',2);await ensurePersonDB('Zoe','zoe','#0891b2',3);
+}
+function showLogin(msg){document.body.classList.add('locked');$('login').classList.add('show');$('lerr').textContent=msg||'';setTimeout(()=>$('lu').focus(),60)}
+async function doLogin(){
+  const u=$('lu').value.trim().toLowerCase(),p=$('lp').value;
+  if(!u||!p){$('lerr').textContent='Enter your username and password.';return}
+  $('lbtn').textContent='Signing in…';
+  try{
+    const d=await jget('/users/'+encodeURIComponent(u));
+    if(!d||d.hash!==hashPw(u,p)){$('lerr').textContent='Wrong username or password.';const c=document.querySelector('.lcard');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');$('lbtn').textContent='Sign in';return}
+    me={u,...d};localStorage.setItem('ttsess',JSON.stringify({u,h:d.hash}));$('lp').value='';$('lbtn').textContent='Sign in';enterApp();
+  }catch(e){$('lerr').textContent='Cannot reach Firebase: '+e.message;$('lbtn').textContent='Sign in'}
+}
+$('lbtn').onclick=doLogin;
+['lu','lp'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()}));
+function enterApp(){
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  $('login').classList.remove('show');document.body.classList.remove('locked');
+  $('fWho').value='';$('fSt').value='';applyRole();render();load();
+  if(!polling){polling=true;setInterval(load,4000)}
+}
+function logout(){
+  try{localStorage.removeItem('ttsess')}catch(e){}
+  me=null;open=null;closeDD();document.querySelectorAll('.ov').forEach(o=>o.classList.remove('show'));
+  showLogin();
+}
+function applyRole(){
+  enhanceAll();
+  $('usersBtn').style.display=isSuper()?'':'none';
+  $('stack').style.display=isAdmin()?'flex':'none';
+  document.querySelector('.pp').style.display=isAdmin()?'':'none';
+  if($('fWho')._dd)$('fWho')._dd.style.display=isAdmin()?'':'none';
+  $('acct').innerHTML=`<i class="av" style="background:${colorOf(me.name)}">${esc(me.name.charAt(0).toUpperCase())}</i><span>${esc(me.name)}</span><span class="rb">${ROLES[me.role]||me.role}</span>`;
+  render();
+}
+/* account modal */
+const aov=$('aov'),uov=$('uov');
+$('acct').onclick=()=>{$('ainfo').textContent='Signed in as @'+me.u+' · '+(ROLES[me.role]||me.role);$('aPass').value='';$('aerr').textContent='';aov.classList.add('show')};
+$('aClose').onclick=()=>aov.classList.remove('show');$('aOut').onclick=logout;
+aov.onclick=e=>{if(e.target===aov)aov.classList.remove('show')};
+$('aSave').onclick=async()=>{
+  const p=$('aPass').value;if(p.length<3){$('aerr').style.color='#dc2626';$('aerr').textContent='Use at least 3 characters.';return}
+  try{const h=hashPw(me.u,p);await jsend('/users/'+me.u,'PATCH',{hash:h});me.hash=h;localStorage.setItem('ttsess',JSON.stringify({u:me.u,h}));$('aPass').value='';$('aerr').style.color='var(--done)';$('aerr').textContent='Password changed.'}
+  catch(e){$('aerr').style.color='#dc2626';$('aerr').textContent='Could not save: '+e.message}
+};
+/* accounts modal (super admin) */
+async function renderUsers(){
+  let us={};try{us=await jget('/users')||{}}catch(e){$('uerr').textContent='Cannot load accounts: '+e.message}
+  const supers=Object.values(us).filter(d=>d.role==='superadmin').length;
+  $('ulist').innerHTML=Object.entries(us).map(([u,d])=>`<div class="pmrow urow"><i class="av" style="background:${colorOf(d.name)}">${esc((d.name||u).charAt(0).toUpperCase())}</i><span><b>${esc(d.name)}</b><br><span class="sub">@${esc(u)}</span></span><select data-ur="${esc(u)}">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}" ${d.role===k?'selected':''}>${v}</option>`).join('')}</select><button data-rp="${esc(u)}" title="Reset password">🔑</button><button data-ud="${esc(u)}" title="Delete">×</button></div>`).join('');
+  enhanceAll();
+  $('ulist').querySelectorAll('[data-ur]').forEach(sel=>sel.onchange=async()=>{
+    const u=sel.dataset.ur;
+    if(us[u].role==='superadmin'&&sel.value!=='superadmin'&&supers<2){$('uerr').textContent='There must be at least one super admin.';renderUsers();return}
+    $('uerr').textContent='';try{await jsend('/users/'+u,'PATCH',{role:sel.value});if(u===me.u){me.role=sel.value;applyRole()}}catch(e){$('uerr').textContent=e.message}renderUsers()});
+  $('ulist').querySelectorAll('[data-rp]').forEach(b=>b.onclick=async()=>{
+    const u=b.dataset.rp,np=prompt('New password for @'+u+':');if(!np)return;
+    const h=hashPw(u,np);await jsend('/users/'+u,'PATCH',{hash:h});
+    if(u===me.u){me.hash=h;localStorage.setItem('ttsess',JSON.stringify({u,h}))}
+    $('uerr').style.color='var(--done)';$('uerr').textContent='Password updated for @'+u+'.'});
+  $('ulist').querySelectorAll('[data-ud]').forEach(b=>b.onclick=async()=>{
+    const u=b.dataset.ud;
+    if(u===me.u){$('uerr').style.color='#dc2626';$('uerr').textContent="You can't delete your own account.";return}
+    if(confirm('Delete account @'+u+'? Their tasks stay.')){await jsend('/users/'+u,'DELETE');renderUsers()}});
+}
+$('usersBtn').onclick=()=>{$('uerr').textContent='';$('uerr').style.color='#dc2626';renderUsers();uov.classList.add('show')};
+$('uClose').onclick=()=>uov.classList.remove('show');
+uov.onclick=e=>{if(e.target===uov)uov.classList.remove('show')};
+$('uAdd').onclick=async()=>{
+  const u=$('uName').value.trim().toLowerCase(),pw=$('uPass').value,role=$('uRole').value;
+  const disp=$('uDisp').value.trim()||(u.charAt(0).toUpperCase()+u.slice(1)),er=$('uerr');er.style.color='#dc2626';
+  if(!/^[a-z0-9_-]{2,20}$/.test(u)){er.textContent='Username: 2–20 letters, numbers, - or _.';return}
+  if(pw.length<3){er.textContent='Password needs at least 3 characters.';return}
+  try{
+    if(await jget('/users/'+u)){er.textContent='That username already exists.';return}
+    await jsend('/users/'+u,'PUT',{name:disp,role,hash:hashPw(u,pw),created:Date.now()});
+    if(!people.some(p=>p.name.toLowerCase()===disp.toLowerCase())){const c=PAL.find(c=>!people.some(x=>x.color===c))||PAL[people.length%PAL.length];const pe={id:'p'+Date.now().toString(36),name:disp,color:c,created:Date.now()};people.push(pe);savePerson(pe);sideUI()}
+    ['uName','uDisp','uPass'].forEach(i=>$(i).value='');er.style.color='var(--done)';er.textContent='Account @'+u+' created.';renderUsers();
+  }catch(e){er.textContent='Could not create: '+e.message}
+};
+addEventListener('keydown',e=>{if(e.key==='Escape'){aov.classList.remove('show');uov.classList.remove('show')}});
+/* start */
+(async function boot(){
+  try{
+    const us=await jget('/users');
+    if(!us)await seedUsers();
+    else if(!Object.values(us).some(d=>d.role==='superadmin')){
+      await jsend('/users/david','PUT',{name:'David',role:'superadmin',hash:hashPw('david','david'),created:Date.now()});
+      await ensurePersonDB('David','david','#4f46e5',1);
+    }
+    const s=JSON.parse(localStorage.getItem('ttsess')||'null');
+    if(s){const d=await jget('/users/'+encodeURIComponent(s.u));if(d&&d.hash===s.h){me={u:s.u,...d};enterApp();return}}
+    showLogin();
+  }catch(e){showLogin('Cannot reach Firebase: '+e.message)}
+})();
 </script>
 </body>
 </html>
