@@ -278,6 +278,14 @@ body.locked .appbar,body.locked .bnav,body.locked .drawer,body.locked .dbg{displ
 .task.isdone::before{content:'';position:absolute;top:0;right:0;width:56px;height:56px;pointer-events:none;background:linear-gradient(225deg,var(--done) 0 50%,transparent 50%);border-top-right-radius:inherit}
 .task.isdone::after{content:'✓';position:absolute;top:6px;right:10px;color:#fff;font-size:15px;font-weight:700;line-height:1;pointer-events:none}
 .task.isdone .main{padding-right:26px}
+/* notes / follow-up viewer + notification dot */
+.ibtn{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--mut);background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:2px 10px;cursor:pointer;line-height:1.5;transition:border-color .2s,color .2s,transform .25s cubic-bezier(.34,1.56,.64,1)}
+.ibtn:hover{border-color:var(--acc);color:var(--acc);transform:translateY(-1px)}
+.ibtn:active{transform:scale(.94)}
+.ibtn svg{width:14px;height:14px;display:block}
+.ibtn.sq{padding:2px 8px}
+.vbody{white-space:pre-wrap;word-break:break-word;max-height:55vh;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.fdot{position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:#ef4444;border:2px solid var(--bg);box-shadow:0 2px 8px rgba(239,68,68,.55);z-index:2;pointer-events:none}
 </style>
 </head>
 <body class="locked">
@@ -403,6 +411,12 @@ body.locked .appbar,body.locked .bnav,body.locked .drawer,body.locked .dbg{displ
   <div class="acts"><button class="btn" id="cancel">Cancel</button><button class="btn p" id="save">Add task</button></div>
 </div></div>
 
+<div class="ov" id="vov"><div class="modal">
+  <h2 id="vTitle"></h2><div class="sub" id="vSub" style="margin-top:-6px"></div>
+  <div class="vbody" id="vBody"></div>
+  <div class="acts"><span></span><button class="btn p" id="vClose">Close</button></div>
+</div></div>
+
 <script>
 const $=id=>document.getElementById(id);
 const MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -415,6 +429,7 @@ const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const short=d=>MON[d.getMonth()].slice(0,3)+' '+d.getDate();
 const rangeLabel=m=>{const f=addD(m,4);return MON[m.getMonth()].slice(0,3)+' '+m.getDate()+' – '+(f.getMonth()!==m.getMonth()?MON[f.getMonth()].slice(0,3)+' ':'')+f.getDate()};
 const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const MAG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>';
 const getLinks=t=>{let l=t.links;if(l&&!Array.isArray(l))l=Object.values(l);return l&&l.length?l:[t.link||'']};
 function linksHTML(v){return v.map((x,i)=>`<div class="lrow"><input type="url" data-lk value="${esc(x)}" placeholder="https://"><button type="button" class="btn lrm" data-lrm="${i}" title="Remove link" ${v.length<2?'disabled':''}>−</button></div>`).join('')+'<button type="button" class="btn ladd" data-ladd>＋ Add link</button>'}
 function linkVals(box){return [...box.querySelectorAll('[data-lk]')].map(i=>i.value.trim())}
@@ -587,6 +602,7 @@ function monthHTML(){
 function card(t){
   const o=open===t.id;
   return `<div class="task ${t.status==='done'?'isdone':''} ${o?'isopen':''}" data-id="${t.id}" style="--i:${Math.min(ci++,12)}">
+  ${t.followup&&t.fuBy==='ixi'?'<i class="fdot" title="New follow-up from Ixi"></i>':''}
   <div class="row">
     <button class="chk ${t.status}" data-cyc="${t.id}" title="Change status">${t.status==='done'?'✓':''}</button>
     <div class="main" data-open="${t.id}">
@@ -594,7 +610,7 @@ function card(t){
       <div class="meta"><span class="pill s-${t.status}">${ST[t.status]}</span>
         <span class="who"><i class="dot" style="background:${colorOf(t.by)}"></i>${esc(t.by)}</span>
         ${t.due?`<span class="has">⏱ ${short(parse(t.due))}</span>`:''}
-        ${t.notes?'<span class="has">📝</span>':''}${t.followup?'<span class="has">💬 follow-up</span>':''}${getLinks(t).some(Boolean)?'<span class="has">🔗</span>':''}
+        ${t.notes?`<button type="button" class="ibtn" data-pop="notes" data-id="${t.id}" title="View notes">📝 Notes</button>`:''}${t.followup?`<button type="button" class="ibtn sq" data-pop="followup" data-id="${t.id}" title="View follow-up" aria-label="View follow-up">${MAG}</button>`:''}${getLinks(t).some(Boolean)?'<span class="has">🔗</span>':''}
       </div></div>
   </div>
   ${o?`<div class="detail">
@@ -616,9 +632,10 @@ function bind(){
   document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(confirm('Delete this task?')){open=null;remove(b.dataset.del);render()}});
   document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{cur=parse(b.dataset.go);enter=true;switchView('week')});
   document.querySelectorAll('.detail [data-f]').forEach(f=>f.onchange=()=>{
-    const id=f.closest('.task').dataset.id;const t=tasks.find(x=>x.id===id);t[f.dataset.f]=f.value;save(t);
+    const id=f.closest('.task').dataset.id;const t=tasks.find(x=>x.id===id);t[f.dataset.f]=f.value;if(f.dataset.f==='followup')t.fuBy=f.value.trim()?(isIxi()?'ixi':me.u):'';save(t);
     if(f.tagName==='SELECT')render();
   });
+  document.querySelectorAll('[data-pop]').forEach(b=>b.onclick=e=>{e.stopPropagation();const t=tasks.find(x=>x.id===b.dataset.id);if(!t)return;const f=b.dataset.pop==='followup';$('vTitle').textContent=f?'Follow-up':'Notes';$('vSub').textContent=t.title;$('vBody').textContent=(f?t.followup:t.notes)||'';$('vov').classList.add('show')});
   document.querySelectorAll('.detail [data-lks]').forEach(box=>{const t=tasks.find(x=>x.id===box.dataset.lks);wireLinks(box,v=>{t.links=v;t.link=v.find(Boolean)||'';save(t)})});
 }
 
@@ -641,7 +658,9 @@ $('save').onclick=async()=>{
   try{await save(t)}catch(e){err('Error: '+e.message)}
   render();
 };
-document.addEventListener('keydown',e=>{if(e.key==='Escape')ov.classList.remove('show')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){ov.classList.remove('show');$('vov').classList.remove('show')}});
+$('vClose').onclick=()=>$('vov').classList.remove('show');
+$('vov').onclick=e=>{if(e.target===$('vov'))$('vov').classList.remove('show')};
 
 /* ---------- legend + people ---------- */
 function personOpts(sel){const n=people.map(p=>p.name);if(sel&&!n.includes(sel))n.push(sel);return n.map(x=>`<option ${x===sel?'selected':''}>${esc(x)}</option>`).join('')}
@@ -782,6 +801,7 @@ let me=null,polling=false;
 const isAdmin=()=>!!me&&me.role!=='user',isSuper=()=>!!me&&me.role==='superadmin';
 const visible=t=>isAdmin()||(!!me&&t.by===me.name);
 const V=()=>tasks.filter(visible);
+const isIxi=()=>!!me&&(me.u==='ixi'||String(me.name||'').toLowerCase()==='ixi');
 async function jget(path){const r=await fetch(DB+path+'.json');if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
 async function jsend(path,method,body){const r=await fetch(DB+path+'.json',{method,body:body===undefined?undefined:JSON.stringify(body)});if(!r.ok)throw new Error('HTTP '+r.status)}
 async function ensurePersonDB(name,id,color,created){if(!(await jget('/people/'+id)))await savePerson({id,name,color,created})}
