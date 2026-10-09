@@ -267,6 +267,17 @@ body.locked .appbar,body.locked .bnav,body.locked .drawer,body.locked .dbg{displ
   .note{margin-top:24px;order:5}
   .lcard{padding:30px 22px}
 }
+/* multi links */
+.lrow{display:flex;gap:8px;margin-bottom:8px}
+.lrow input{flex:1;min-width:0}
+.lrm{width:40px;padding:0;flex:none;font-size:18px}
+.lrm:disabled{opacity:.35;cursor:not-allowed}
+.ladd{width:100%}
+/* done corner slash */
+.task{position:relative}
+.task.isdone::before{content:'';position:absolute;top:0;right:0;width:56px;height:56px;pointer-events:none;background:linear-gradient(225deg,var(--done) 0 50%,transparent 50%);border-top-right-radius:inherit}
+.task.isdone::after{content:'✓';position:absolute;top:6px;right:10px;color:#fff;font-size:15px;font-weight:700;line-height:1;pointer-events:none}
+.task.isdone .main{padding-right:26px}
 </style>
 </head>
 <body class="locked">
@@ -387,7 +398,7 @@ body.locked .appbar,body.locked .bnav,body.locked .drawer,body.locked .dbg{displ
     <div><label>Week (pick any day)</label><input type="date" id="nDate"></div>
     <div><label>Deadline (optional)</label><input type="date" id="nDue"></div>
   </div>
-  <div><label>Link (optional)</label><input type="url" id="nLink" placeholder="https://"></div>
+  <div><label>Links (optional)</label><div id="nLinks"></div></div>
   <div><label>Notes</label><textarea id="nNotes"></textarea></div>
   <div class="acts"><button class="btn" id="cancel">Cancel</button><button class="btn p" id="save">Add task</button></div>
 </div></div>
@@ -404,6 +415,21 @@ const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const short=d=>MON[d.getMonth()].slice(0,3)+' '+d.getDate();
 const rangeLabel=m=>{const f=addD(m,4);return MON[m.getMonth()].slice(0,3)+' '+m.getDate()+' – '+(f.getMonth()!==m.getMonth()?MON[f.getMonth()].slice(0,3)+' ':'')+f.getDate()};
 const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const getLinks=t=>{let l=t.links;if(l&&!Array.isArray(l))l=Object.values(l);return l&&l.length?l:[t.link||'']};
+function linksHTML(v){return v.map((x,i)=>`<div class="lrow"><input type="url" data-lk value="${esc(x)}" placeholder="https://"><button type="button" class="btn lrm" data-lrm="${i}" title="Remove link" ${v.length<2?'disabled':''}>−</button></div>`).join('')+'<button type="button" class="btn ladd" data-ladd>＋ Add link</button>'}
+function linkVals(box){return [...box.querySelectorAll('[data-lk]')].map(i=>i.value.trim())}
+function wireLinks(box,onChange){
+  box.onclick=e=>{
+    const a=e.target.closest('[data-ladd]'),r=e.target.closest('[data-lrm]');
+    if(!a&&!r)return;
+    e.stopPropagation();
+    const v=linkVals(box);
+    if(a)v.push('');else{v.splice(+r.dataset.lrm,1);if(!v.length)v.push('')}
+    box.innerHTML=linksHTML(v);onChange(v);
+    if(a){const i=box.querySelectorAll('[data-lk]');i[i.length-1].focus()}
+  };
+  box.onchange=()=>onChange(linkVals(box));
+}
 
 const PAL=['#4f46e5','#db2777','#0891b2','#16a34a','#d97706','#7c3aed','#e11d48','#0d9488','#2563eb','#ea580c'];
 const DEF=[{id:'david',name:'David',color:'#4f46e5',created:1},{id:'ixi',name:'Ixi',color:'#db2777',created:2}];
@@ -568,18 +594,18 @@ function card(t){
       <div class="meta"><span class="pill s-${t.status}">${ST[t.status]}</span>
         <span class="who"><i class="dot" style="background:${colorOf(t.by)}"></i>${esc(t.by)}</span>
         ${t.due?`<span class="has">⏱ ${short(parse(t.due))}</span>`:''}
-        ${t.notes?'<span class="has">📝</span>':''}${t.followup?'<span class="has">💬 follow-up</span>':''}${t.link?'<span class="has">🔗</span>':''}
+        ${t.notes?'<span class="has">📝</span>':''}${t.followup?'<span class="has">💬 follow-up</span>':''}${getLinks(t).some(Boolean)?'<span class="has">🔗</span>':''}
       </div></div>
   </div>
   ${o?`<div class="detail">
     <div><label>Title</label><input type="text" data-f="title" value="${esc(t.title)}"></div>
     <div class="g2">${isAdmin()?`<div><label>Set up by</label><select data-f="by">${personOpts(t.by)}</select></div>`:'<div></div>'}
     <div><label>Status</label><select data-f="status">${Object.entries(ST).map(([k,v])=>`<option value="${k}" ${t.status===k?'selected':''}>${v}</option>`).join('')}</select></div></div>
-    <div class="g2"><div><label>Deadline</label><input type="date" data-f="due" value="${esc(t.due)}"></div>
-    <div><label>Link</label><input type="url" data-f="link" value="${esc(t.link)}" placeholder="https://"></div></div>
+    <div><label>Deadline</label><input type="date" data-f="due" value="${esc(t.due)}"></div>
+    <div><label>Links</label><div data-lks="${t.id}">${linksHTML(getLinks(t))}</div></div>
     <div><label>Notes</label><textarea data-f="notes">${esc(t.notes)}</textarea></div>
     <div class="fu"><label>Follow-up</label><textarea data-f="followup" placeholder="Questions, feedback, next steps…">${esc(t.followup)}</textarea></div>
-    ${t.link?`<a href="${esc(t.link)}" target="_blank" rel="noopener" class="sub">Open link ↗</a>`:''}
+    ${getLinks(t).filter(Boolean).map((l,i,a)=>`<a href="${esc(l)}" target="_blank" rel="noopener" class="sub">Open link${a.length>1?' '+(i+1):''} ↗</a>`).join('')}
     <div class="acts"><button class="btn del" data-del="${t.id}">Delete</button><button class="btn" data-open="${t.id}">Close</button></div>
   </div>`:''}
   </div>`;
@@ -593,12 +619,13 @@ function bind(){
     const id=f.closest('.task').dataset.id;const t=tasks.find(x=>x.id===id);t[f.dataset.f]=f.value;save(t);
     if(f.tagName==='SELECT')render();
   });
+  document.querySelectorAll('.detail [data-lks]').forEach(box=>{const t=tasks.find(x=>x.id===box.dataset.lks);wireLinks(box,v=>{t.links=v;t.link=v.find(Boolean)||'';save(t)})});
 }
 
 /* ---------- add task ---------- */
 const ov=$('ov');
 $('add').onclick=()=>{
-  $('nTitle').value='';$('nNotes').value='';$('nLink').value='';$('nDue').value='';
+  $('nTitle').value='';$('nNotes').value='';$('nLinks').innerHTML=linksHTML(['']);wireLinks($('nLinks'),()=>{});$('nDue').value='';
   $('nDate').value=iso(addD(cur,0));$('nSt').value='todo';if(people.some(p=>p.name===me.name))$('nBy').value=me.name;enhanceAll();$('nBy').parentElement.style.display=isAdmin()?'':'none';
   ov.classList.add('show');setTimeout(()=>$('nTitle').focus(),50);
 };
@@ -608,7 +635,7 @@ $('save').onclick=async()=>{
   const title=$('nTitle').value.trim();if(!title){$('nTitle').focus();return}
   const w=iso(monday(parse($('nDate').value||iso(cur))));
   const t={id:'t'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),title,by:isAdmin()?$('nBy').value:me.name,status:$('nSt').value,
-    notes:$('nNotes').value.trim(),followup:'',link:$('nLink').value.trim(),due:$('nDue').value,week:w,created:Date.now()};
+    notes:$('nNotes').value.trim(),followup:'',link:linkVals($('nLinks')).find(Boolean)||'',links:linkVals($('nLinks')),due:$('nDue').value,week:w,created:Date.now()};
   ov.classList.remove('show');cur=parse(w);view='week';
   tasks.push(t);render();tasks.pop();
   try{await save(t)}catch(e){err('Error: '+e.message)}
