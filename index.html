@@ -377,7 +377,8 @@ input:disabled,textarea:disabled{opacity:.7;cursor:not-allowed}
 .pb{height:8px;border-radius:9px;background:var(--line);margin-top:6px;overflow:hidden;display:flex}
 .pb i{display:block;height:100%}
 /* notifications */
-.bellbtn{position:relative}
+.bellbtn{position:relative;overflow:visible}
+.bellbtn .nb{top:-8px;right:-8px;min-width:22px;height:22px;font-size:12px}
 .nlist{display:grid;gap:4px;max-height:55vh;overflow:auto}
 .nrow{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:14px;cursor:pointer;transition:background .2s}
 .nrow:hover{background:var(--accs)}
@@ -1475,7 +1476,7 @@ async function pollNotifs(){
   nBusy=false;
 }
 function markNotifsRead(){
-  const t=Math.max(0,...Object.entries(notifs).filter(([id,n])=>!pend[id]&&n.by!==me.u).map(([,n])=>n.ts||0));
+  const t=Math.max(0,...Object.entries(notifs).filter(([id])=>!pend[id]).map(([,n])=>n.ts||0));
   if(t>nSeen){nSeen=t;jsend('/nreads/'+me.u,'PUT',t).catch(()=>{})}
 }
 const NI={followup:'💬',assigned:'📌',done:'✅'};
@@ -1487,14 +1488,14 @@ function nText(n){
 }
 function renderNotifs(){
   if(!me)return;
-  const un=Object.values(notifs).filter(n=>n.by!==me.u&&(n.ts||0)>nSeen).length;
+  const un=Object.entries(notifs).filter(([id,n])=>!pend[id]&&(n.ts||0)>nSeen).length;
   document.querySelectorAll('.nbell').forEach(b=>{b.hidden=!un;b.textContent=un>99?'99+':un});
   if(!nov.classList.contains('show'))return;
   const box=$('nlist');
   const l=Object.entries(notifs).map(([id,v])=>({id,...v})).sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,80);
   const sig=l.map(x=>x.id).join(',')+'|'+(isSuper()?'s':'')+'|'+nPrev;
   if(box._sig===sig)return;box._sig=sig;
-  box.innerHTML=l.length?l.map(n=>`<div class="nrow ${n.by!==me.u&&(n.ts||0)>nPrev?'new':''}" data-nid="${esc(n.id)}">${avH(n.by,36)}<div class="ntx">${NI[n.type]||'🔔'} ${nText(n)}<small>${fmtT(n.ts)}</small></div>${isSuper()?`<button type="button" class="nx" data-ndel="${esc(n.id)}" title="Delete for everyone">×</button>`:''}</div>`).join(''):'<div class="empty">No notifications yet.</div>';
+  box.innerHTML=l.length?l.map(n=>`<div class="nrow ${(n.ts||0)>nPrev?'new':''}" data-nid="${esc(n.id)}">${avH(n.by,36)}<div class="ntx">${NI[n.type]||'🔔'} ${nText(n)}<small>${fmtT(n.ts)}</small></div>${isSuper()?`<button type="button" class="nx" data-ndel="${esc(n.id)}" title="Delete for everyone">×</button>`:''}</div>`).join(''):'<div class="empty">No notifications yet.</div>';
 }
 function openNotifs(){
   if(!me)return;
