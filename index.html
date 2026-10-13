@@ -320,21 +320,31 @@ body.locked .appbar,body.locked .bnav,body.locked .drawer,body.locked .dbg{displ
 #cin{flex:1;min-height:44px;height:44px;max-height:120px;resize:none;border-radius:14px;padding:10px 12px;width:auto}
 #csend{height:44px;border-radius:14px}
 
+/* edit / delete own messages + delete-all */
+.cact{display:inline-flex;gap:10px;margin-right:8px}
+.cact button{border:0;background:none;color:inherit;font-size:11px;padding:0;cursor:pointer;text-decoration:underline;opacity:.9}
+.cact button:hover{opacity:1}
+.cm .cts{opacity:1}.cm .cts .tm{opacity:.65}
+.cedit{display:grid;gap:6px;min-width:min(260px,60vw)}
+.cedit textarea{min-height:56px;background:var(--card);color:var(--ink);border-radius:10px}
+.cedit .er{display:flex;gap:6px;justify-content:flex-end}
+.cedit .btn{padding:4px 12px;font-size:12px;color:var(--ink)}
+.cedit .btn.p{color:#fff}
+.cdall{width:100%;margin:2px 0 10px;font-size:13px;padding:7px 10px;color:#dc2626;border:1px solid #dc2626;background:none}
+.cdall:hover{background:#dc2626;color:#fff;border-color:#dc2626}
+
 /* ---- notification "wavers" (right edge) ---- */
 .wall{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:25;display:flex;flex-direction:column;gap:0;pointer-events:none}
 body.locked .wall,body.chat-open .wall{display:none}
-/* size reduced a bit (was 336px / 32vh); capped to the viewport height so it never overflows */
 .waver{--wh:min(260px,25vh);--ww:calc(var(--wh)*.857);--cut:calc(var(--wh)*.1);position:relative;width:var(--ww);height:var(--wh);pointer-events:auto;cursor:pointer;animation:peek .8s cubic-bezier(.34,1.56,.64,1) both;animation-delay:var(--d,0s);
-  /* clip at the bottom edge only (everything else may overflow: speech bubble, badge) so the image's cut edge never shows while it waves */
   clip-path:inset(-80px -500px 0 -500px)}
 .waver+.waver{margin-top:calc(var(--wh)*-.12)}
-/* circle behind the image removed; image sits slightly below the clip line so the wave never reveals its bottom edge */
-.wimg{position:absolute;right:-8px;bottom:calc(var(--cut)*-1);transform-origin:90% 100%;animation:wave 1.3s ease-in-out infinite;animation-delay:var(--d,0s);filter:drop-shadow(0 10px 18px rgba(0,0,0,.25));height:100%;width:auto;max-width:none}
+/* drop shadow removed from the waving image */
+.wimg{position:absolute;right:-8px;bottom:calc(var(--cut)*-1);transform-origin:90% 100%;animation:wave 1.3s ease-in-out infinite;animation-delay:var(--d,0s);filter:none;height:100%;width:auto;max-width:none}
 .wn{position:absolute;left:4px;top:0;min-width:32px;height:32px;padding:0 8px;border-radius:99px;background:#ef4444;color:#fff;font-size:15px;font-weight:700;display:grid;place-items:center;border:3px solid var(--bg);box-shadow:0 4px 14px rgba(239,68,68,.55);z-index:4;animation:nbp 1.6s ease-in-out infinite}
 .wsay{position:absolute;right:calc(var(--ww) - 4px);top:6px;width:max-content;max-width:240px;background:var(--card);border:1px solid var(--line);border-radius:16px 16px 4px 16px;padding:8px 12px;font-size:15px;line-height:1.35;box-shadow:0 8px 24px rgba(20,20,50,.2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;animation:pop .5s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(var(--d,0s) + .5s)}
 .wsay b{display:block;font-size:12px;color:var(--acc)}
 @keyframes peek{from{transform:translateX(120%)}}
-/* gentler wave: smaller rotation, no vertical lift (was -5deg..8deg with -3px lift) */
 @keyframes wave{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(3deg)}}
 
 /* profile picture editor */
@@ -603,7 +613,6 @@ function fillSel(){
 }
 fillSel();
 function syncSel(){
-  // weeks belong to the month of their Thursday-neutral midpoint: use Monday's month for simplicity
   $('mSel').value=cur.getMonth();$('ySel').value=cur.getFullYear();
 }
 function jump(){
@@ -1061,11 +1070,16 @@ document.addEventListener('touchend',e=>{
    /reads/<username>/<room> = timestamp of the last message that user has read
    /users/<username>/avatar = profile picture (small JPEG data URL)
    rooms: "team" (everyone) or "<userA>~<userB>" (private chat, names sorted)
+
+   Edit / delete: a user can edit or delete ONLY their own messages. It is silent:
+   the message is simply changed or removed, with no "edited" or "deleted" label and no
+   notification to anyone else. The super admin can also wipe every chat.
 */
 const IMGBASE='https://raw.githubusercontent.com/Kunlun-17/TaskTracker/refs/heads/main/';
 /* Notification (waving) images: used ONLY for the pop-up notification on the right edge */
 const CIMG={citla:IMGBASE+'citla.png',ixi:IMGBASE+'ixi.png',valentina:IMGBASE+'valentina.png',zoe:IMGBASE+'zoe.png'};
 let chat={},reads={},uMap={},cRoom=null,cSeen=null,cTimer=null,cUsersAt=0,cBusy=false;
+let cEdit=null,cDraft='';
 const cov=$('cov');
 const roomOf=(a,b)=>[a,b].sort().join('~');
 const nameOf=u=>(uMap[u]&&uMap[u].name)||(me&&u===me.u?me.name:u);
@@ -1119,7 +1133,6 @@ function audio(){
   }catch(e){return null}
 }
 ['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev,()=>{audio()},{passive:true}));
-/* one soft bell-like note: sine fundamental + quiet octave partial, smooth attack and exponential decay */
 function note(freq,start,dur,vol){
   const a=audio();if(!a)return;
   const t0=a.currentTime+start,out=a.createGain(),lp=a.createBiquadFilter();
@@ -1173,12 +1186,12 @@ async function pollChat(){
   cBusy=false;
 }
 function chatInit(){
-  cSeen=null;chat={};reads={};cUsersAt=0;cRoom=null;
+  cSeen=null;chat={};reads={};cUsersAt=0;cRoom=null;cEdit=null;cDraft='';
   pollChat();
   if(!cTimer)cTimer=setInterval(pollChat,3000);
 }
 function chatReset(){
-  cRoom=null;chat={};reads={};cSeen=null;uMap={};
+  cRoom=null;chat={};reads={};cSeen=null;uMap={};cEdit=null;cDraft='';
   cov.classList.remove('show');document.body.classList.remove('chat-open');
   $('wall').innerHTML='';$('wall')._k='';
   document.querySelectorAll('.nb').forEach(b=>b.hidden=true);
@@ -1199,9 +1212,8 @@ function renderWall(){
     o.n++;if((m.ts||0)>=o.ts){o.ts=m.ts||0;o.room=rm;o.text=m.text}
   }));
   const list=Object.values(by).sort((a,b)=>b.ts-a.ts).slice(0,3);
-  const key=list.map(x=>x.u+x.n+x.room+x.ts).join('|');
+  const key=list.map(x=>x.u+x.n+x.room+x.ts+x.text).join('|');
   if(w._k===key)return;w._k=key;
-  /* the coloured circle behind the image was removed: only the speech bubble, the image and the count badge remain */
   w.innerHTML=list.map((x,i)=>{
     const im=notifImgOf(x.u),nm=nameOf(x.u);
     return `<div class="waver" data-room="${esc(x.room)}" style="--d:${i*.3}s" title="${esc(nm)} sent a message">
@@ -1213,8 +1225,9 @@ function renderWall(){
 function renderList(){
   const rows=allRooms().map(rm=>{const l=msgs(rm);return{rm,last:l[l.length-1],n:unread(rm).length}})
     .sort((a,b)=>(a.rm==='team'?-1:0)-(b.rm==='team'?-1:0)||((b.last?b.last.ts:0)-(a.last?a.last.ts:0)));
-  $('clist').innerHTML='<h3>Conversations</h3>'+rows.map(r=>`<div class="crow ${r.rm===cRoom?'act':''} ${r.n?'has':''}" data-room="${esc(r.rm)}">${roomAv(r.rm,40)}<div class="cx"><b>${esc(roomName(r.rm))}</b><small>${r.last?esc((r.last.from===me.u?'You: ':(r.rm==='team'?nameOf(r.last.from)+': ':''))+r.last.text):'No messages yet'}</small></div>${r.n?`<i class="cbad">${r.n}</i>`:''}</div>`).join('');
+  $('clist').innerHTML='<h3>Conversations</h3>'+(isSuper()?'<button type="button" class="btn cdall" id="cDelAll">🗑 Delete all chats</button>':'')+rows.map(r=>`<div class="crow ${r.rm===cRoom?'act':''} ${r.n?'has':''}" data-room="${esc(r.rm)}">${roomAv(r.rm,40)}<div class="cx"><b>${esc(roomName(r.rm))}</b><small>${r.last?esc((r.last.from===me.u?'You: ':(r.rm==='team'?nameOf(r.last.from)+': ':''))+r.last.text):'No messages yet'}</small></div>${r.n?`<i class="cbad">${r.n}</i>`:''}</div>`).join('');
   $('clist').querySelectorAll('.crow').forEach(el=>el.onclick=()=>openChat(el.dataset.room));
+  const da=$('cDelAll');if(da)da.onclick=deleteAllChats;
 }
 function renderThread(){
   const rm=cRoom,box=$('cmsgs'),mod=$('cmod');
@@ -1226,19 +1239,25 @@ function renderThread(){
   }
   $('cform').style.display='';
   $('chtitle').innerHTML=roomAv(rm,34)+'<span>'+esc(roomName(rm))+'</span>';
-  const l=msgs(rm),sig=rm+':'+l.map(m=>m.id).join(',')+':'+l.map(m=>photoOf(m.from).length).join('.');
+  const l=msgs(rm),sig=rm+':'+l.map(m=>m.id+'|'+m.text).join(',')+':'+l.map(m=>photoOf(m.from).length).join('.')+':'+(cEdit||'');
   if(box._sig===sig)return;
   const newRoom=!box._sig||box._sig.split(':')[0]!==rm;
   const near=box.scrollHeight-box.scrollTop-box.clientHeight<90;
   box._sig=sig;
   box.innerHTML=l.length?l.map(m=>{
     const mine=m.from===me.u;
-    return `<div class="cm ${mine?'me':''}">${mine?'':avH(m.from,28)}<div class="cb">${!mine&&rm==='team'?`<i class="cn">${esc(nameOf(m.from))}</i>`:''}<div class="ct">${esc(m.text)}</div><span class="cts">${fmtT(m.ts)}</span></div></div>`}).join('')
+    const editing=mine&&cEdit===m.id;
+    const acts=mine&&!editing?`<span class="cact"><button type="button" data-cedit="${m.id}">Edit</button><button type="button" data-cdel="${m.id}">Delete</button></span>`:'';
+    const body=editing
+      ?`<div class="cedit"><textarea data-cdraft>${esc(cDraft)}</textarea><div class="er"><button type="button" class="btn" data-ccancel>Cancel</button><button type="button" class="btn p" data-csave="${m.id}">Save</button></div></div>`
+      :`<div class="ct">${esc(m.text)}</div><span class="cts">${acts}<span class="tm">${fmtT(m.ts)}</span></span>`;
+    return `<div class="cm ${mine?'me':''}">${mine?'':avH(m.from,28)}<div class="cb">${!mine&&rm==='team'?`<i class="cn">${esc(nameOf(m.from))}</i>`:''}${body}</div></div>`}).join('')
     :'<div class="cempty">No messages yet. Say hi! 👋</div>';
   if(newRoom||near||l[l.length-1].from===me.u)box.scrollTop=box.scrollHeight;
 }
 function openChat(rm){
   const mobile=matchMedia('(max-width:700px)').matches;
+  if(rm&&rm!==cRoom){cEdit=null;cDraft=''}
   cRoom=rm||(mobile?null:(cRoom||'team'));
   $('cmsgs')._sig=null;
   cov.classList.add('show');document.body.classList.add('chat-open');setMenu(false);
@@ -1248,7 +1267,7 @@ function openChat(rm){
   if(cRoom&&!mobile)setTimeout(()=>$('cin').focus(),60);
 }
 function closeChat(){
-  cov.classList.remove('show');document.body.classList.remove('chat-open');cRoom=null;
+  cov.classList.remove('show');document.body.classList.remove('chat-open');cRoom=null;cEdit=null;cDraft='';
   renderChat();
 }
 async function sendChat(){
@@ -1262,9 +1281,62 @@ async function sendChat(){
   try{await jsend('/chat/'+rm+'/'+id,'PUT',{from:me.u,text:text.slice(0,2000),ts:{'.sv':'timestamp'}})}
   catch(e){err('Could not send message: '+e.message)}
 }
+
+/* ---------- edit / delete own messages (silent) ---------- */
+async function deleteMsg(rm,id){
+  const m=(chat[rm]||{})[id];
+  if(!m||m.from!==me.u)return;
+  if(!confirm('Delete this message?'))return;
+  delete chat[rm][id];
+  if(cEdit===id){cEdit=null;cDraft=''}
+  renderChat();
+  try{await jsend('/chat/'+rm+'/'+id,'DELETE')}
+  catch(e){err('Could not delete message: '+e.message)}
+}
+async function saveEdit(rm,id){
+  const m=(chat[rm]||{})[id];
+  if(!m||m.from!==me.u){cEdit=null;cDraft='';renderChat();return}
+  const text=cDraft.trim().slice(0,2000);
+  if(!text){alert('A message cannot be empty. Use Delete to remove it.');return}
+  cEdit=null;cDraft='';
+  if(text!==m.text){
+    m.text=text;
+    renderChat();
+    try{await jsend('/chat/'+rm+'/'+id,'PATCH',{text})}
+    catch(e){err('Could not edit message: '+e.message)}
+  }else renderChat();
+}
+async function deleteAllChats(){
+  if(!isSuper())return;
+  if(!confirm('Delete ALL chat messages for everyone? This cannot be undone.'))return;
+  chat={};reads={};cEdit=null;cDraft='';
+  if(cSeen)cSeen=new Set();
+  $('cmsgs')._sig=null;
+  renderChat();
+  try{await jsend('/chat','DELETE');await jsend('/reads','DELETE')}
+  catch(e){err('Could not delete chats: '+e.message)}
+}
+const cmsgsEl=$('cmsgs');
+cmsgsEl.addEventListener('click',e=>{
+  const ed=e.target.closest('[data-cedit]'),dl=e.target.closest('[data-cdel]'),sv=e.target.closest('[data-csave]'),cn=e.target.closest('[data-ccancel]');
+  if(ed){
+    const m=((chat[cRoom]||{})[ed.dataset.cedit]);if(!m||m.from!==me.u)return;
+    cEdit=ed.dataset.cedit;cDraft=m.text;cmsgsEl._sig=null;renderThread();
+    const ta=cmsgsEl.querySelector('[data-cdraft]');if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)}
+  }else if(dl)deleteMsg(cRoom,dl.dataset.cdel);
+  else if(sv)saveEdit(cRoom,sv.dataset.csave);
+  else if(cn){cEdit=null;cDraft='';cmsgsEl._sig=null;renderThread()}
+});
+cmsgsEl.addEventListener('input',e=>{if(e.target.matches('[data-cdraft]'))cDraft=e.target.value});
+cmsgsEl.addEventListener('keydown',e=>{
+  if(!e.target.matches('[data-cdraft]'))return;
+  if(e.key==='Escape'){e.stopPropagation();cEdit=null;cDraft='';cmsgsEl._sig=null;renderThread()}
+  else if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();saveEdit(cRoom,cEdit)}
+});
+
 document.querySelectorAll('.chbtn').forEach(b=>b.onclick=()=>openChat());
 $('cclose').onclick=closeChat;
-$('cback').onclick=()=>{cRoom=null;$('cmsgs')._sig=null;renderChat();renderList();renderThread()};
+$('cback').onclick=()=>{cRoom=null;cEdit=null;cDraft='';$('cmsgs')._sig=null;renderChat();renderList();renderThread()};
 cov.onclick=e=>{if(e.target===cov)closeChat()};
 $('csend').onclick=sendChat;
 $('cin').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat()}});
