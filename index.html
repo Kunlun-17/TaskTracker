@@ -52,9 +52,6 @@ select{background:var(--card);border:1px solid var(--line);border-radius:10px;pa
 .sp{flex:1}
 .task{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px}
 .row{display:flex;gap:12px;align-items:flex-start}
-.chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--todo);flex:none;margin-top:2px;cursor:pointer;display:grid;place-items:center;background:none;padding:0;font-size:12px;color:#fff}
-.chk.progress{border-color:var(--prog);background:linear-gradient(90deg,var(--prog) 50%,transparent 50%)}
-.chk.done{border-color:var(--done);background:var(--done)}
 .main{flex:1;min-width:0;cursor:pointer}
 .t{font-weight:600;word-break:break-word}
 .done .t,.task.isdone .t{color:var(--mut);text-decoration:line-through}
@@ -234,7 +231,6 @@ body.locked .appbar,body.locked .bnav,body.locked .drawer,body.locked .dbg{displ
   .task{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--card);border-radius:20px;padding:15px 16px}
   .task:hover{transform:none;box-shadow:none}
   .task:active{transform:scale(.985)}
-  .chk{width:27px;height:27px;margin-top:0}
   .t{font-size:16px}
   .task.isopen .detail{position:fixed;left:0;right:0;bottom:0;z-index:45;max-height:86vh;overflow:auto;margin:0;padding:12px 18px calc(24px + env(safe-area-inset-bottom));border:0;background:var(--card);border-radius:28px 28px 0 0;box-shadow:0 -24px 70px rgba(0,0,0,.28);animation:sheet .5s cubic-bezier(.32,.72,0,1);overscroll-behavior:contain}
   .task.isopen .detail::before{content:'';display:block;width:44px;height:5px;border-radius:9px;background:var(--line);margin:0 auto 6px}
@@ -273,11 +269,6 @@ body.locked .appbar,body.locked .bnav,body.locked .drawer,body.locked .dbg{displ
 .lrm{width:40px;padding:0;flex:none;font-size:18px}
 .lrm:disabled{opacity:.35;cursor:not-allowed}
 .ladd{width:100%}
-/* done corner slash */
-.task{position:relative}
-.task.isdone::before{content:'';position:absolute;top:0;right:0;width:56px;height:56px;pointer-events:none;background:linear-gradient(225deg,var(--done) 0 50%,transparent 50%);border-top-right-radius:inherit}
-.task.isdone::after{content:'✓';position:absolute;top:6px;right:10px;color:#fff;font-size:15px;font-weight:700;line-height:1;pointer-events:none}
-.task.isdone .main{padding-right:26px}
 /* notes / follow-up viewer + notification dot */
 .vbtn{margin-top:8px;font-size:13px;padding:6px 12px}
 .vbody{white-space:pre-wrap;word-break:break-word;max-height:55vh;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
@@ -339,7 +330,6 @@ body.locked .wall,body.chat-open .wall{display:none}
 .waver{--wh:min(260px,25vh);--ww:calc(var(--wh)*.857);--cut:calc(var(--wh)*.1);position:relative;width:var(--ww);height:var(--wh);pointer-events:auto;cursor:pointer;animation:peek .8s cubic-bezier(.34,1.56,.64,1) both;animation-delay:var(--d,0s);
   clip-path:inset(-80px -500px 0 -500px)}
 .waver+.waver{margin-top:calc(var(--wh)*-.12)}
-/* drop shadow removed from the waving image */
 .wimg{position:absolute;right:-8px;bottom:calc(var(--cut)*-1);transform-origin:90% 100%;animation:wave 1.3s ease-in-out infinite;animation-delay:var(--d,0s);filter:none;height:100%;width:auto;max-width:none}
 .wn{position:absolute;left:4px;top:0;min-width:32px;height:32px;padding:0 8px;border-radius:99px;background:#ef4444;color:#fff;font-size:15px;font-weight:700;display:grid;place-items:center;border:3px solid var(--bg);box-shadow:0 4px 14px rgba(239,68,68,.55);z-index:4;animation:nbp 1.6s ease-in-out infinite}
 .wsay{position:absolute;right:calc(var(--ww) - 4px);top:6px;width:max-content;max-width:240px;background:var(--card);border:1px solid var(--line);border-radius:16px 16px 4px 16px;padding:8px 12px;font-size:15px;line-height:1.35;box-shadow:0 8px 24px rgba(20,20,50,.2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;animation:pop .5s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(var(--d,0s) + .5s)}
@@ -366,6 +356,38 @@ body.locked .wall,body.chat-open .wall{display:none}
   .wsay{max-width:170px;font-size:13px}
   .wn{min-width:26px;height:26px;font-size:13px}
 }
+
+/* ================= NEW: single status sash, assignee avatar, per-person breakdown, notifications ================= */
+.row{align-items:center}
+.tav{flex:none;display:inline-flex;border-radius:50%}
+.task .main{padding-right:30px}
+.sash{position:absolute;top:0;right:0;width:56px;height:56px;pointer-events:none;border-top-right-radius:inherit;background:linear-gradient(225deg,var(--sc) 0 50%,transparent 50%);font-style:normal}
+.sash svg{position:absolute;top:7px;right:7px;width:17px;height:17px;color:#fff}
+.sash.done{--sc:var(--done)}.sash.progress{--sc:var(--prog)}.sash.todo{--sc:var(--todo)}
+.dd-btn:disabled{opacity:.6;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+input:disabled,textarea:disabled{opacity:.7;cursor:not-allowed}
+.vonly{font-size:12px;color:var(--mut);background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:6px 10px}
+/* per-person breakdown */
+.pbd{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);display:grid;gap:12px}
+.pbd:empty{display:none}
+.pbh{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--mut)}
+.ph{display:flex;align-items:center;gap:8px;min-width:0}
+.ph b{font-size:13px}
+.pc{margin-left:auto;display:flex;gap:10px;font-size:12px;font-weight:600;flex-wrap:wrap;justify-content:flex-end}
+.pb{height:8px;border-radius:9px;background:var(--line);margin-top:6px;overflow:hidden;display:flex}
+.pb i{display:block;height:100%}
+/* notifications */
+.bellbtn{position:relative}
+.nlist{display:grid;gap:4px;max-height:55vh;overflow:auto}
+.nrow{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:14px;cursor:pointer;transition:background .2s}
+.nrow:hover{background:var(--accs)}
+.nrow.new{background:var(--accs);box-shadow:inset 3px 0 0 var(--acc)}
+.nrow .ntx{flex:1;min-width:0;font-size:14px;line-height:1.35;word-break:break-word}
+.nrow .ntx small{display:block;color:var(--mut);font-size:12px;margin-top:2px}
+.nrow .nx{border:0;background:none;color:var(--mut);font-size:20px;line-height:1;cursor:pointer;padding:0 4px}
+.nrow .nx:hover{color:#dc2626}
+@media(max-width:700px){.ab-r{gap:6px}}
+@media(max-width:400px){.brand span{display:none}}
 </style>
 </head>
 <body class="locked">
@@ -374,6 +396,7 @@ body.locked .wall,body.chat-open .wall{display:none}
 <div class="appbar" id="appbar">
   <div class="brand"><i class="logo-s">✓</i><div><b>Task Tracker</b><span id="abSub"></span></div></div>
   <div class="ab-r">
+    <button class="ham chb bellbtn" id="bellBtnM" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1112 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 21a1.9 1.9 0 003.4 0"/></svg><b class="nb nbell" hidden></b></button>
     <button class="ham chb chbtn" id="chatBtnM" aria-label="Chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg><b class="nb" hidden></b></button>
     <button class="ham" id="ham" aria-label="Menu"><i></i><i></i><i></i></button>
   </div>
@@ -406,8 +429,9 @@ body.locked .wall,body.chat-open .wall{display:none}
     <div><h1>Task Tracker</h1><div class="sub">Team tracker · weekly, Monday to Friday</div></div>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="btn" id="usersBtn" style="display:none">Accounts</button>
+      <button class="btn bellbtn" id="bellBtn" title="Notifications">🔔<b class="nb nbell" hidden></b></button>
       <button class="btn chbtn" id="chatBtn">💬 Chat<b class="nb" hidden></b></button>
-      <div class="stack" id="stack" title="Manage people"></div>
+      <div class="stack" id="stack" title="People"></div>
       <button class="btn acct" id="acct"></button>
       <button class="btn" id="theme" title="Toggle theme">◐</button>
     </div>
@@ -423,6 +447,7 @@ body.locked .wall,body.chat-open .wall{display:none}
     <div class="days" id="days"></div>
     <div class="bar" id="bar"></div>
     <div class="stats" id="stats"></div>
+    <div class="pbd" id="pbd"></div>
   </div>
 
   <div class="tools">
@@ -462,9 +487,16 @@ body.locked .wall,body.chat-open .wall{display:none}
   </section>
 </div></div>
 
+<div class="ov" id="nov"><div class="modal" style="max-width:520px">
+  <h2>Notifications</h2>
+  <div class="sub" id="nsub" style="margin-top:-6px">Follow-ups and tasks added by Ixi, and completed tasks</div>
+  <div class="nlist" id="nlist"></div>
+  <div class="acts"><span></span><button class="btn p" id="nClose">Close</button></div>
+</div></div>
+
 <div class="ov" id="uov"><div class="modal" style="max-width:580px">
   <h2>Accounts</h2>
-  <div class="sub" style="margin-top:-6px">User: sees only their own tasks · Admin: sees everything and adds people · Super admin: also manages accounts</div>
+  <div class="sub" style="margin-top:-6px">User: can see everyone's tasks, edits only their own · Admin: edits everything and adds people · Super admin: also manages accounts</div>
   <div id="ulist"></div>
   <div style="border-top:1px dashed var(--line);padding-top:12px;display:grid;gap:10px">
     <label style="margin:0">New account</label>
@@ -537,7 +569,7 @@ const short=d=>MON[d.getMonth()].slice(0,3)+' '+d.getDate();
 const rangeLabel=m=>{const f=addD(m,4);return MON[m.getMonth()].slice(0,3)+' '+m.getDate()+' – '+(f.getMonth()!==m.getMonth()?MON[f.getMonth()].slice(0,3)+' ':'')+f.getDate()};
 const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const getLinks=t=>{let l=t.links;if(l&&!Array.isArray(l))l=Object.values(l);return l&&l.length?l:[t.link||'']};
-function linksHTML(v){return v.map((x,i)=>`<div class="lrow"><input type="url" data-lk value="${esc(x)}" placeholder="https://"><button type="button" class="btn lrm" data-lrm="${i}" title="Remove link" ${v.length<2?'disabled':''}>−</button></div>`).join('')+'<button type="button" class="btn ladd" data-ladd>＋ Add link</button>'}
+function linksHTML(v,ro){return v.map((x,i)=>`<div class="lrow"><input type="url" data-lk value="${esc(x)}" placeholder="https://" ${ro?'disabled':''}><button type="button" class="btn lrm" data-lrm="${i}" title="Remove link" ${(v.length<2||ro)?'disabled':''}>−</button></div>`).join('')+(ro?'':'<button type="button" class="btn ladd" data-ladd>＋ Add link</button>')}
 function linkVals(box){return [...box.querySelectorAll('[data-lk]')].map(i=>i.value.trim())}
 function wireLinks(box,onChange){
   box.onclick=e=>{
@@ -663,6 +695,16 @@ $('fWho').onchange=render;$('fSt').onchange=render;
 
 /* ---------- rendering ---------- */
 function filt(a){const w=$('fWho').value,s=$('fSt').value;return a.filter(t=>(!w||t.by===w)&&(!s||t.status===s))}
+
+/* per-person breakdown (done = that person's profile color) */
+function personRows(wk){
+  const names=people.map(p=>p.name);
+  wk.forEach(t=>{if(t.by&&!names.includes(t.by))names.push(t.by)});
+  return names.map(n=>{
+    const a=wk.filter(t=>t.by===n),k=s=>a.filter(t=>t.status===s).length;
+    return{n,c:colorOf(n),d:k('done'),p:k('progress'),o:k('todo'),tot:a.length};
+  }).filter(r=>r.tot);
+}
 function render(){
   const key=iso(cur),isNow=key===thisMon;
   $('wkTitle').textContent=rangeLabel(cur)+', '+addD(cur,4).getFullYear();
@@ -672,10 +714,12 @@ function render(){
   const td=iso(new Date());
   $('days').innerHTML=['Mon','Tue','Wed','Thu','Fri'].map((n,i)=>{const d=addD(cur,i);return `<div class="day ${iso(d)===td?'today':''}">${n}<b>${d.getDate()}</b></div>`}).join('');
   const wk=V().filter(t=>t.week===key);
-  const c={todo:0,progress:0,done:0};wk.forEach(t=>c[t.status]++);
+  const c={todo:0,progress:0,done:0};wk.forEach(t=>{if(c[t.status]!==undefined)c[t.status]++});
   const n=wk.length||1;
-  $('bar').innerHTML=`<i style="width:${c.done/n*100}%;background:var(--done)"></i><i style="width:${c.progress/n*100}%;background:var(--prog)"></i>`;
+  const rows=personRows(wk);
+  $('bar').innerHTML=rows.map(r=>`<i title="${esc(r.n)}: ${r.d} done" style="width:${r.d/n*100}%;background:${r.c}"></i>`).join('')+`<i title="In progress" style="width:${c.progress/n*100}%;background:var(--prog)"></i>`;
   $('stats').innerHTML=wk.length?`<span>${c.done} of ${wk.length} done</span><span>${c.progress} in progress</span><span>${c.todo} not started</span>`:'<span>No tasks yet this week</span>';
+  $('pbd').innerHTML=rows.length?`<div class="pbh"><span style="color:var(--ink)">Done</span> / <span style="color:var(--prog)">In progress</span> / <span style="color:var(--todo)">Not started</span></div>`+rows.map(r=>`<div class="prow"><div class="ph">${taskAv(r.n,24)}<b>${esc(r.n)}</b><span class="pc"><span style="color:${r.c}">${r.d} done</span><span style="color:var(--prog)">${r.p} in progress</span><span style="color:var(--todo)">${r.o} not started</span></span></div><div class="pb"><i style="width:${r.d/r.tot*100}%;background:${r.c}"></i><i style="width:${r.p/r.tot*100}%;background:var(--prog)"></i></div></div>`).join(''):'';
   syncSel();
   document.querySelectorAll('#view button').forEach(x=>x.classList.toggle('on',x.dataset.v===view));
   ci=0;$('list').innerHTML=view==='week'?weekHTML(key):monthHTML();
@@ -704,44 +748,62 @@ function monthHTML(){
   });
   return h;
 }
+/* single status sash icons (white glyph on the status color) */
+const SASH={
+  done:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  progress:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M7 3v3.5c0 1.5 1 2.6 2.4 3.6L12 12l-2.6 1.9C8 14.9 7 16 7 17.5V21M17 3v3.5c0 1.5-1 2.6-2.4 3.6L12 12l2.6 1.9C16 14.9 17 16 17 17.5V21"/></svg>',
+  todo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>'
+};
+const canEdit=t=>isAdmin()||(!!me&&t.by===me.name);
 function card(t){
-  const o=open===t.id;
-  return `<div class="task ${t.status==='done'?'isdone':''} ${o?'isopen':''}" data-id="${t.id}" style="--i:${Math.min(ci++,12)}">
+  const o=open===t.id,st=ST[t.status]?t.status:'todo',ro=!canEdit(t),dis=ro?'disabled':'';
+  return `<div class="task st-${st} ${st==='done'?'isdone':''} ${o?'isopen':''}" data-id="${t.id}" style="--i:${Math.min(ci++,12)}">
+  <i class="sash ${st}" title="${ST[st]}">${SASH[st]}</i>
   ${t.followup&&t.fuBy==='ixi'?'<i class="fdot" title="New follow-up from Ixi"></i>':''}
   <div class="row">
-    <button class="chk ${t.status}" data-cyc="${t.id}" title="Change status">${t.status==='done'?'✓':''}</button>
+    <span class="tav" title="${esc(t.by)}">${taskAv(t.by,48)}</span>
     <div class="main" data-open="${t.id}">
       <div class="t">${esc(t.title)}</div>
-      <div class="meta"><span class="pill s-${t.status}">${ST[t.status]}</span>
+      <div class="meta"><span class="pill s-${st}">${ST[st]}</span>
         <span class="who"><i class="dot" style="background:${colorOf(t.by)}"></i>${esc(t.by)}</span>
         ${t.due?`<span class="has">⏱ ${short(parse(t.due))}</span>`:''}
         ${t.notes?'<span class="has">📝</span>':''}${t.followup?'<span class="has">💬 follow-up</span>':''}${getLinks(t).some(Boolean)?'<span class="has">🔗</span>':''}
       </div></div>
   </div>
   ${o?`<div class="detail">
-    <div><label>Title</label><input type="text" data-f="title" value="${esc(t.title)}"></div>
+    ${ro?`<div class="vonly">👀 View only · this task is assigned to ${esc(t.by)}</div>`:''}
+    <div><label>Title</label><input type="text" data-f="title" value="${esc(t.title)}" ${dis}></div>
     <div class="g2">${isAdmin()?`<div><label>Set up by</label><select data-f="by">${personOpts(t.by)}</select></div>`:'<div></div>'}
-    <div><label>Status</label><select data-f="status">${Object.entries(ST).map(([k,v])=>`<option value="${k}" ${t.status===k?'selected':''}>${v}</option>`).join('')}</select></div></div>
-    <div><label>Deadline</label><input type="date" data-f="due" value="${esc(t.due)}"></div>
-    <div><label>Links</label><div data-lks="${t.id}">${linksHTML(getLinks(t))}</div></div>
-    <div><label>Notes</label><textarea data-f="notes">${esc(t.notes)}</textarea><button type="button" class="btn vbtn" data-pop="notes">View full notes</button></div>
-    <div class="fu"><label>Follow-up</label><textarea data-f="followup" placeholder="Questions, feedback, next steps…">${esc(t.followup)}</textarea><button type="button" class="btn vbtn" data-pop="followup">View full follow-up</button></div>
+    <div><label>Status</label><select data-f="status" ${dis}>${Object.entries(ST).map(([k,v])=>`<option value="${k}" ${st===k?'selected':''}>${v}</option>`).join('')}</select></div></div>
+    <div><label>Deadline</label><input type="date" data-f="due" value="${esc(t.due)}" ${dis}></div>
+    <div><label>Links</label><div data-lks="${t.id}">${linksHTML(getLinks(t),ro)}</div></div>
+    <div><label>Notes</label><textarea data-f="notes" ${dis}>${esc(t.notes)}</textarea><button type="button" class="btn vbtn" data-pop="notes">View full notes</button></div>
+    <div class="fu"><label>Follow-up</label><textarea data-f="followup" placeholder="Questions, feedback, next steps…" ${dis}>${esc(t.followup)}</textarea><button type="button" class="btn vbtn" data-pop="followup">View full follow-up</button></div>
     ${getLinks(t).filter(Boolean).map((l,i,a)=>`<a href="${esc(l)}" target="_blank" rel="noopener" class="sub">Open link${a.length>1?' '+(i+1):''} ↗</a>`).join('')}
-    <div class="acts"><button class="btn del" data-del="${t.id}">Delete</button><button class="btn" data-open="${t.id}">Close</button></div>
+    <div class="acts">${ro?'<span></span>':`<button class="btn del" data-del="${t.id}">Delete</button>`}<button class="btn" data-open="${t.id}">Close</button></div>
   </div>`:''}
   </div>`;
 }
 function bind(){
-  document.querySelectorAll('[data-cyc]').forEach(b=>b.onclick=e=>{e.stopPropagation();const t=tasks.find(x=>x.id===b.dataset.cyc);const o=['todo','progress','done'];t.status=o[(o.indexOf(t.status)+1)%3];save(t);render()});
   document.querySelectorAll('.main[data-open],button[data-open]').forEach(b=>b.onclick=()=>{open=open===b.dataset.open?null:b.dataset.open;render()});
   document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(confirm('Delete this task?')){open=null;remove(b.dataset.del);render()}});
   document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{cur=parse(b.dataset.go);enter=true;switchView('week')});
   document.querySelectorAll('.detail [data-f]').forEach(f=>f.onchange=()=>{
-    const id=f.closest('.task').dataset.id;const t=tasks.find(x=>x.id===id);t[f.dataset.f]=f.value;if(f.dataset.f==='followup')t.fuBy=f.value.trim()?(isIxi()?'ixi':me.u):'';save(t);
+    const id=f.closest('.task').dataset.id;const t=tasks.find(x=>x.id===id);
+    if(!t||!canEdit(t))return;
+    const k=f.dataset.f,old=t[k];
+    t[k]=f.value;
+    if(k==='followup'){
+      t.fuBy=f.value.trim()?(isIxi()?'ixi':me.u):'';
+      if(isIxi()&&f.value.trim()&&f.value.trim()!==String(old||'').trim())pushNotif('followup',t);
+    }
+    if(k==='status'&&old!=='done'&&f.value==='done')pushNotif('done',t);
+    if(k==='by'&&isIxi()&&f.value!==old&&f.value.toLowerCase()!==String(me.name).toLowerCase())pushNotif('assigned',t);
+    save(t);
     if(f.tagName==='SELECT')render();
   });
   document.querySelectorAll('[data-pop]').forEach(b=>b.onclick=e=>{e.stopPropagation();const d=b.closest('.detail'),t=tasks.find(x=>x.id===b.closest('.task').dataset.id),k=b.dataset.pop,f=k==='followup';$('vTitle').textContent=f?'Follow-up':'Notes';$('vSub').textContent=t?t.title:'';$('vBody').textContent=d.querySelector('[data-f="'+k+'"]').value;$('vov').classList.add('show')});
-  document.querySelectorAll('.detail [data-lks]').forEach(box=>{const t=tasks.find(x=>x.id===box.dataset.lks);wireLinks(box,v=>{t.links=v;t.link=v.find(Boolean)||'';save(t)})});
+  document.querySelectorAll('.detail [data-lks]').forEach(box=>{const t=tasks.find(x=>x.id===box.dataset.lks);if(!t||!canEdit(t))return;wireLinks(box,v=>{t.links=v;t.link=v.find(Boolean)||'';save(t)})});
 }
 
 /* ---------- add task ---------- */
@@ -761,6 +823,8 @@ $('save').onclick=async()=>{
   ov.classList.remove('show');cur=parse(w);view='week';
   tasks.push(t);render();tasks.pop();
   try{await save(t)}catch(e){err('Error: '+e.message)}
+  if(t.status==='done')pushNotif('done',t);
+  if(isIxi()&&String(t.by).toLowerCase()!==String(me.name).toLowerCase())pushNotif('assigned',t);
   render();
 };
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){ov.classList.remove('show');$('vov').classList.remove('show')}});
@@ -778,7 +842,7 @@ function scopeTasks(){
 }
 function fillSel2(id,html,first){const el=$(id),v=el.value;el.innerHTML=html;el.value=[...el.options].some(o=>o.value===v)?v:(first??el.options[0].value);if(el._dd)refreshDD(el)}
 function sideUI(){
-  const sc=scopeTasks(),c={todo:0,progress:0,done:0};sc.forEach(t=>c[t.status]++);
+  const sc=scopeTasks(),c={todo:0,progress:0,done:0};sc.forEach(t=>{if(c[t.status]!==undefined)c[t.status]++});
   $('cDone').textContent=c.done;$('cProg').textContent=c.progress;$('cTodo').textContent=c.todo;
   $('scope').textContent='Counts for this '+view;
   const fs=$('fSt').value,fw=$('fWho').value;
@@ -821,7 +885,7 @@ addEventListener('keydown',e=>{if(e.key==='Escape')pov.classList.remove('show')}
 const DDC={todo:'--todo',progress:'--prog',done:'--done'};
 function closeDD(){if(ddMenu){ddMenu.remove();ddMenu=null}if(ddOpen){ddOpen.classList.remove('open');ddOpen=null}}
 function dotH(v){const c=DDC[v]?`var(${DDC[v]})`:(people.find(p=>p.name===v)||{}).color;return c?`<i class="dot" style="background:${c}"></i>`:''}
-function refreshDD(sel){const w=sel._dd;if(!w)return;const o=sel.options[sel.selectedIndex];w.querySelector('.lbl').innerHTML=dotH(sel.value)+esc(o?o.textContent:'')}
+function refreshDD(sel){const w=sel._dd;if(!w)return;const o=sel.options[sel.selectedIndex];w.querySelector('.lbl').innerHTML=dotH(sel.value)+esc(o?o.textContent:'');w.querySelector('button').disabled=!!sel.disabled}
 function enhance(sel){
   if(sel._dd){refreshDD(sel);return}
   const w=document.createElement('div');w.className='dd'+(sel.closest('.detail,.modal')?' full':'');
@@ -904,8 +968,8 @@ const hashPw=(u,p)=>sha256js('tt1:'+u+':'+p);
 const ROLES={user:'User',admin:'Admin',superadmin:'Super admin'};
 let me=null,polling=false;
 const isAdmin=()=>!!me&&me.role!=='user',isSuper=()=>!!me&&me.role==='superadmin';
-const visible=t=>isAdmin()||(!!me&&t.by===me.name);
-const V=()=>tasks.filter(visible);
+/* everyone can now see every task (editing is still limited, see canEdit) */
+const V=()=>tasks;
 const isIxi=()=>!!me&&(me.u==='ixi'||String(me.name||'').toLowerCase()==='ixi');
 async function jget(path){const r=await fetch(DB+path+'.json');if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
 async function jsend(path,method,body){const r=await fetch(DB+path+'.json',{method,body:body===undefined?undefined:JSON.stringify(body)});if(!r.ok)throw new Error('HTTP '+r.status)}
@@ -935,19 +999,21 @@ function enterApp(){
   $('fWho').value='';$('fSt').value='';applyRole();render();load();
   if(!polling){polling=true;setInterval(load,4000)}
   chatInit();
+  notifInit();
 }
 function logout(){
   try{localStorage.removeItem('ttsess')}catch(e){}
-  chatReset();
+  chatReset();notifReset();
   me=null;open=null;closeDD();setMenu(false);document.querySelectorAll('.ov').forEach(o=>o.classList.remove('show'));
   showLogin();
 }
 function applyRole(){
   enhanceAll();
   $('usersBtn').style.display=isSuper()?'':'none';
-  $('stack').style.display=isAdmin()?'flex':'none';
-  document.querySelector('.pp').style.display=isAdmin()?'':'none';
-  if($('fWho')._dd)$('fWho')._dd.style.display=isAdmin()?'':'none';
+  $('stack').style.display='flex';
+  document.querySelector('.pp').style.display='';
+  $('addPerson').style.display=isAdmin()?'':'none';
+  if($('fWho')._dd)$('fWho')._dd.style.display='';
   $('dPeople').style.display=isAdmin()?'':'none';$('dUsers').style.display=isSuper()?'':'none';
   $('dhead').innerHTML=`<span style="border:2px solid rgba(255,255,255,.55);border-radius:50%;display:inline-grid">${avH(me.u,46)}</span><div><b style="font-size:17px;display:block">${esc(me.name)}</b><span style="font-size:12px;opacity:.85">@${esc(me.u)} · ${ROLES[me.role]||me.role}</span></div>`;
   $('acct').innerHTML=`${avH(me.u,26)}<span>${esc(me.name)}</span><span class="rb">${ROLES[me.role]||me.role}</span>`;
@@ -1080,6 +1146,7 @@ const IMGBASE='https://raw.githubusercontent.com/Kunlun-17/TaskTracker/refs/head
 const CIMG={david:IMGBASE+'david.png',citla:IMGBASE+'citla.png',ixi:IMGBASE+'ixi.png',valentina:IMGBASE+'valentina.png',zoe:IMGBASE+'zoe.png'};
 let chat={},reads={},uMap={},cRoom=null,cSeen=null,cTimer=null,cUsersAt=0,cBusy=false;
 let cEdit=null,cDraft='';
+let avSig=null;
 const cov=$('cov');
 const roomOf=(a,b)=>[a,b].sort().join('~');
 const nameOf=u=>(uMap[u]&&uMap[u].name)||(me&&u===me.u?me.name:u);
@@ -1103,6 +1170,26 @@ function totalUnread(){return allRooms().reduce((n,r)=>n+unread(r).length,0)}
 function avH(u,s){
   const n=nameOf(u),im=photoOf(u);
   return `<span class="cav" style="width:${s}px;height:${s}px;font-size:${Math.round(s*.45)}px;background:${colorOf(n)}">${esc(String(n).charAt(0).toUpperCase())}${im?`<img src="${im}" alt="" onerror="this.remove()">`:''}</span>`;
+}
+/* avatar of whoever a task is assigned to (matched by display name) */
+function userByName(n){
+  if(!n)return null;const l=String(n).toLowerCase();
+  if(me&&String(me.name).toLowerCase()===l)return me.u;
+  for(const [u,d] of Object.entries(uMap))if(d&&String(d.name).toLowerCase()===l)return u;
+  return null;
+}
+function taskAv(n,s){
+  const u=userByName(n);
+  if(u)return avH(u,s);
+  return `<span class="cav" style="width:${s}px;height:${s}px;font-size:${Math.round(s*.45)}px;background:${colorOf(n)}">${esc(String(n||'?').charAt(0).toUpperCase())}</span>`;
+}
+/* re-draw tasks when profile pictures / names change (without interrupting typing) */
+function avRefresh(){
+  const sig=Object.entries(uMap).map(([k,v])=>k+':'+((v&&v.avatar)||'').length+':'+((v&&v.name)||'')).join('|');
+  if(sig===avSig)return;
+  const a=document.activeElement;
+  if(ddMenu||(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&a.closest('#list')))return;
+  avSig=sig;render();
 }
 function roomAv(rm,s){
   if(rm==='team')return `<span class="cav" style="width:${s}px;height:${s}px;font-size:${Math.round(s*.5)}px;background:linear-gradient(135deg,var(--acc),#a855f7)">👥</span>`;
@@ -1160,7 +1247,7 @@ function playReceive(){       /* G5 -> D6 -> G6, gentle three-note chime */
 async function pollChat(){
   if(!me||cBusy)return;cBusy=true;
   try{
-    if(Date.now()-cUsersAt>15000){const us=await jget('/users');if(us){uMap=us;cUsersAt=Date.now()}}
+    if(Date.now()-cUsersAt>15000){const us=await jget('/users');if(us){uMap=us;cUsersAt=Date.now();avRefresh()}}
     const [c,r]=await Promise.all([jget('/chat'),jget('/reads/'+me.u)]);
     chat=c||{};
     Object.entries(r||{}).forEach(([k,v])=>{reads[k]=Math.max(reads[k]||0,v||0)});
@@ -1186,21 +1273,21 @@ async function pollChat(){
   cBusy=false;
 }
 function chatInit(){
-  cSeen=null;chat={};reads={};cUsersAt=0;cRoom=null;cEdit=null;cDraft='';
+  cSeen=null;chat={};reads={};cUsersAt=0;cRoom=null;cEdit=null;cDraft='';avSig=null;
   pollChat();
   if(!cTimer)cTimer=setInterval(pollChat,3000);
 }
 function chatReset(){
-  cRoom=null;chat={};reads={};cSeen=null;uMap={};cEdit=null;cDraft='';
+  cRoom=null;chat={};reads={};cSeen=null;uMap={};cEdit=null;cDraft='';avSig=null;
   cov.classList.remove('show');document.body.classList.remove('chat-open');
   $('wall').innerHTML='';$('wall')._k='';
-  document.querySelectorAll('.nb').forEach(b=>b.hidden=true);
+  document.querySelectorAll('.chbtn .nb').forEach(b=>b.hidden=true);
   document.title='Team Task Tracker';
 }
 function renderChat(){
   if(!me)return;
   const n=totalUnread();
-  document.querySelectorAll('.nb').forEach(b=>{b.hidden=!n;b.textContent=n>99?'99+':n});
+  document.querySelectorAll('.chbtn .nb').forEach(b=>{b.hidden=!n;b.textContent=n>99?'99+':n});
   document.title=(n?'('+n+') ':'')+'Team Task Tracker';
   renderWall();
   if(cov.classList.contains('show')){renderList();renderThread()}
@@ -1343,6 +1430,104 @@ $('cin').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preve
 $('cin').addEventListener('input',e=>{const t=e.target;t.style.height='44px';t.style.height=Math.min(t.scrollHeight,120)+'px'});
 addEventListener('keydown',e=>{if(e.key==='Escape'&&cov.classList.contains('show'))closeChat()});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&me){if(cov.classList.contains('show')&&cRoom)markRead(cRoom);pollChat()}});
+
+/* ================= NOTIFICATIONS (bell) =================
+   Firebase layout:
+   /notifs/<id>   = {type:'followup'|'assigned'|'done', by:<username>, byName, to:<assignee name>,
+                     taskId, title, week, ts:<server time>}
+   /nreads/<username> = timestamp of the last notification that user has seen
+
+   Created when:
+   - Ixi adds / changes a follow-up note on a task         -> "followup"
+   - Ixi adds a task to (or reassigns a task to) someone else -> "assigned"
+   - Anyone marks a task as Done (or adds it already Done)  -> "done"
+
+   Everyone can see them. Only the super admin gets the x button. Deleting is silent:
+   the notification just disappears for everybody, nobody is told about it.
+*/
+const nov=$('nov');
+let notifs={},pend={},nSeen=0,nPrev=0,nTimer=null,nBusy=false;
+async function pushNotif(type,t,extra){
+  if(!me||!t)return;
+  const id='n'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  const n=Object.assign({type,by:me.u,byName:me.name,to:t.by||'',taskId:t.id,title:t.title||'',week:t.week||'',ts:Date.now()},extra||{});
+  notifs[id]=n;pend[id]=n;renderNotifs();
+  try{await jsend('/notifs/'+id,'PUT',Object.assign({},n,{ts:{'.sv':'timestamp'}}))}
+  catch(e){err('Could not send notification: '+e.message)}
+  delete pend[id];
+}
+async function delNotif(id){
+  if(!isSuper())return;
+  delete notifs[id];delete pend[id];
+  nov.querySelector('#nlist')._sig=null;renderNotifs();
+  try{await jsend('/notifs/'+id,'DELETE')}
+  catch(e){err('Could not delete notification: '+e.message)}
+}
+async function pollNotifs(){
+  if(!me||nBusy)return;nBusy=true;
+  try{
+    const [n,r]=await Promise.all([jget('/notifs'),jget('/nreads/'+me.u)]);
+    notifs=Object.assign({},n||{},pend);
+    nSeen=Math.max(nSeen,r||0);
+    if(nov.classList.contains('show')&&!document.hidden)markNotifsRead();
+    renderNotifs();
+  }catch(e){}
+  nBusy=false;
+}
+function markNotifsRead(){
+  const t=Math.max(0,...Object.entries(notifs).filter(([id,n])=>!pend[id]&&n.by!==me.u).map(([,n])=>n.ts||0));
+  if(t>nSeen){nSeen=t;jsend('/nreads/'+me.u,'PUT',t).catch(()=>{})}
+}
+const NI={followup:'💬',assigned:'📌',done:'✅'};
+function nText(n){
+  const who='<b>'+esc(n.byName||nameOf(n.by))+'</b>',t='“'+esc(n.title)+'”';
+  if(n.type==='followup')return `${who} added a follow-up on ${t}${n.to?` <small>Task of ${esc(n.to)}</small>`:''}`;
+  if(n.type==='assigned')return `${who} assigned ${t} to <b>${esc(n.to)}</b>`;
+  return `${who} completed ${t}${n.to&&n.to!==n.byName?` <small>Task of ${esc(n.to)}</small>`:''}`;
+}
+function renderNotifs(){
+  if(!me)return;
+  const un=Object.values(notifs).filter(n=>n.by!==me.u&&(n.ts||0)>nSeen).length;
+  document.querySelectorAll('.nbell').forEach(b=>{b.hidden=!un;b.textContent=un>99?'99+':un});
+  if(!nov.classList.contains('show'))return;
+  const box=$('nlist');
+  const l=Object.entries(notifs).map(([id,v])=>({id,...v})).sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,80);
+  const sig=l.map(x=>x.id).join(',')+'|'+(isSuper()?'s':'')+'|'+nPrev;
+  if(box._sig===sig)return;box._sig=sig;
+  box.innerHTML=l.length?l.map(n=>`<div class="nrow ${n.by!==me.u&&(n.ts||0)>nPrev?'new':''}" data-nid="${esc(n.id)}">${avH(n.by,36)}<div class="ntx">${NI[n.type]||'🔔'} ${nText(n)}<small>${fmtT(n.ts)}</small></div>${isSuper()?`<button type="button" class="nx" data-ndel="${esc(n.id)}" title="Delete for everyone">×</button>`:''}</div>`).join(''):'<div class="empty">No notifications yet.</div>';
+}
+function openNotifs(){
+  if(!me)return;
+  setMenu(false);nPrev=nSeen;$('nlist')._sig=null;
+  nov.classList.add('show');markNotifsRead();renderNotifs();
+}
+function closeNotifs(){nov.classList.remove('show')}
+$('nlist').onclick=e=>{
+  const x=e.target.closest('[data-ndel]');
+  if(x){e.stopPropagation();delNotif(x.dataset.ndel);return}
+  const r=e.target.closest('[data-nid]');if(!r)return;
+  const n=notifs[r.dataset.nid];if(!n)return;
+  const t=tasks.find(z=>z.id===n.taskId);if(!t)return;
+  closeNotifs();
+  $('fWho').value='';$('fSt').value='';refreshDD($('fWho'));refreshDD($('fSt'));
+  cur=parse(t.week);view='week';open=t.id;enter=true;render();
+  setTimeout(()=>{const el=document.querySelector('.task[data-id="'+t.id+'"]');if(el&&el.scrollIntoView)el.scrollIntoView({block:'center',behavior:'smooth'})},80);
+};
+document.querySelectorAll('.bellbtn').forEach(b=>b.onclick=openNotifs);
+$('nClose').onclick=closeNotifs;
+nov.onclick=e=>{if(e.target===nov)closeNotifs()};
+addEventListener('keydown',e=>{if(e.key==='Escape')closeNotifs()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&me){if(nov.classList.contains('show'))markNotifsRead();pollNotifs()}});
+function notifInit(){
+  notifs={};pend={};nSeen=0;nPrev=0;
+  pollNotifs();
+  if(!nTimer)nTimer=setInterval(pollNotifs,4000);
+}
+function notifReset(){
+  notifs={};pend={};nSeen=0;nPrev=0;
+  nov.classList.remove('show');
+  document.querySelectorAll('.nbell').forEach(b=>b.hidden=true);
+}
 
 /* start */
 (async function boot(){
