@@ -547,7 +547,7 @@ input:disabled,textarea:disabled{opacity:.7;cursor:not-allowed}
     <div><label>Deadline (optional)</label><input type="date" id="nDue"></div>
   </div>
   <div><label>Links (optional)</label><div id="nLinks"></div></div>
-  <div><label>Notes</label><textarea id="nNotes"></textarea></div>
+  <div><label>Notes</label><textarea id="nNotes" placeholder="Tip: start a line with - or • and press Enter for a bullet list"></textarea></div>
   <div class="acts"><button class="btn" id="cancel">Cancel</button><button class="btn p" id="save">Add task</button></div>
 </div></div>
 
@@ -778,7 +778,7 @@ function card(t){
     <div><label>Status</label><select data-f="status" ${dis}>${Object.entries(ST).map(([k,v])=>`<option value="${k}" ${st===k?'selected':''}>${v}</option>`).join('')}</select></div></div>
     <div><label>Deadline</label><input type="date" data-f="due" value="${esc(t.due)}" ${dis}></div>
     <div><label>Links</label><div data-lks="${t.id}">${linksHTML(getLinks(t),ro)}</div></div>
-    <div><label>Notes</label><textarea data-f="notes" ${dis}>${esc(t.notes)}</textarea><button type="button" class="btn vbtn" data-pop="notes">View full notes</button></div>
+    <div><label>Notes</label><textarea data-f="notes" placeholder="Tip: start a line with - or • and press Enter for a bullet list" ${dis}>${esc(t.notes)}</textarea><button type="button" class="btn vbtn" data-pop="notes">View full notes</button></div>
     <div class="fu"><label>Follow-up</label><textarea data-f="followup" placeholder="Questions, feedback, next steps…" ${dis}>${esc(t.followup)}</textarea><button type="button" class="btn vbtn" data-pop="followup">View full follow-up</button></div>
     ${getLinks(t).filter(Boolean).map((l,i,a)=>`<a href="${esc(l)}" target="_blank" rel="noopener" class="sub">Open link${a.length>1?' '+(i+1):''} ↗</a>`).join('')}
     <div class="acts">${ro?'<span></span>':`<button class="btn del" data-del="${t.id}">Delete</button>`}<button class="btn" data-open="${t.id}">Close</button></div>
@@ -1529,6 +1529,46 @@ function notifReset(){
   nov.classList.remove('show');
   document.querySelectorAll('.nbell').forEach(b=>b.hidden=true);
 }
+
+/* ================= BULLETS in Notes / Follow-up =================
+   - Pasting a bulleted or numbered list (Google Docs, Word, web pages, Notion...) keeps the bullets
+   - Typing "- ", "* " or "• " and pressing Enter continues the list; Enter on an empty bullet ends it */
+const BULSEL='textarea[data-f="notes"],textarea[data-f="followup"],#nNotes';
+function insText(ta,text){
+  if(!document.execCommand('insertText',false,text)){
+    ta.setRangeText(text,ta.selectionStart,ta.selectionEnd,'end');
+    ta.dispatchEvent(new Event('input',{bubbles:true}));
+    ta.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+}
+function htmlToBullets(html){
+  const doc=new DOMParser().parseFromString(html,'text/html');
+  if(!doc.querySelector('li'))return null;
+  const lines=[],isL=x=>x.nodeType===1&&/^(UL|OL)$/.test(x.tagName);
+  const own=li=>[...li.childNodes].filter(x=>!isL(x)).map(x=>x.textContent).join('').replace(/\s+/g,' ').trim();
+  const list=(el,d)=>{let i=0;for(const li of el.children){if(li.tagName!=='LI')continue;i++;const o=own(li);if(o)lines.push('  '.repeat(d)+(el.tagName==='OL'?i+'. ':'• ')+o);for(const k of li.children)if(isL(k))list(k,d+1)}};
+  const walk=n=>{for(const c of n.children){if(isL(c))list(c,0);else if(c.querySelector&&c.querySelector('li'))walk(c);else{const s=c.textContent.replace(/\s+/g,' ').trim();if(s)lines.push(s)}}};
+  walk(doc.body);
+  return lines.join('\n');
+}
+document.addEventListener('paste',e=>{
+  const ta=e.target;if(!ta.matches||!ta.matches(BULSEL))return;
+  const html=e.clipboardData&&e.clipboardData.getData('text/html');if(!html)return;
+  const txt=htmlToBullets(html);if(txt==null||!txt)return;
+  e.preventDefault();insText(ta,txt);
+});
+document.addEventListener('keydown',e=>{
+  const ta=e.target;
+  if(e.key!=='Enter'||e.shiftKey||e.isComposing||!ta.matches||!ta.matches(BULSEL))return;
+  if(ta.selectionStart!==ta.selectionEnd)return;
+  const pos=ta.selectionStart,v=ta.value,ls=v.lastIndexOf('\n',pos-1)+1;
+  const line=v.slice(ls,pos),m=line.match(/^(\s*)([•\-\*]|\d+\.)\s+(.*)$/);
+  if(!m)return;
+  e.preventDefault();
+  if(!m[3].trim()){ta.setSelectionRange(ls,pos);insText(ta,'');return}
+  let mk=m[2];if(/^\d+\.$/.test(mk))mk=(parseInt(mk,10)+1)+'.';
+  insText(ta,'\n'+m[1]+mk+' ');
+});
 
 /* start */
 (async function boot(){
