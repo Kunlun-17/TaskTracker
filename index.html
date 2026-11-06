@@ -271,6 +271,9 @@ body.locked .appbar,body.locked .bnav,body.locked .drawer,body.locked .dbg{displ
 .ladd{width:100%}
 /* notes / follow-up viewer + notification dot */
 .vbtn{margin-top:8px;font-size:13px;padding:6px 12px}
+.drx summary{cursor:pointer;font-weight:600;font-size:13px}.drx>div{margin-top:8px}
+.drsec{margin-top:10px}.drsec label{display:flex;justify-content:space-between;gap:8px}.drc{font-weight:500}.drc.over{color:#dc2626}
+.drsec textarea{min-height:74px;resize:vertical;line-height:1.45}.drsec[data-k=summary] textarea,.drsec[data-k=impact] textarea{min-height:120px}
 .vbody{white-space:pre-wrap;word-break:break-word;max-height:55vh;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 .fdot{position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:#ef4444;border:2px solid var(--bg);box-shadow:0 2px 8px rgba(239,68,68,.55);z-index:2;pointer-events:none}
 
@@ -408,6 +411,7 @@ input:disabled,textarea:disabled{opacity:.7;cursor:not-allowed}
   <button class="di" data-act="acct" style="--k:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>My account</button>
   <button class="di" id="dPeople" data-act="people" style="--k:1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 2.9-6 6.5-6s6.5 2.5 6.5 6"/><path d="M16 4.6a3.5 3.5 0 010 6.8M18 14.3c2.2.7 3.5 2.6 3.5 5.7"/></svg>People</button>
   <button class="di" id="dUsers" data-act="users" style="--k:2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>Accounts &amp; roles</button>
+  <button class="di" id="dDone" data-act="done" style="--k:2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13l2 2 4-4"/></svg>Done report</button>
   <button class="di" data-act="theme" style="--k:3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 019.5 4 8.5 8.5 0 1020 14.5z"/></svg>Dark / light</button>
   <div style="flex:1"></div>
   <button class="di out" data-act="out" style="--k:4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H5a1 1 0 00-1 1v14a1 1 0 001 1h4M16 8l4 4-4 4M20 12H9"/></svg>Sign out</button>
@@ -430,6 +434,7 @@ input:disabled,textarea:disabled{opacity:.7;cursor:not-allowed}
     <div><h1>Task Tracker</h1><div class="sub">Team tracker · weekly, Monday to Friday</div></div>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="btn" id="usersBtn" style="display:none">Accounts</button>
+      <button class="btn" id="drBtn" style="display:none" title="Generate a monthly Done Report">Done report</button>
       <button class="btn bellbtn" id="bellBtn" title="Notifications">🔔<b class="nb nbell" hidden></b></button>
       <button class="btn chbtn" id="chatBtn">💬 Chat<b class="nb" hidden></b></button>
       <div class="stack" id="stack" title="People"></div>
@@ -555,6 +560,24 @@ input:disabled,textarea:disabled{opacity:.7;cursor:not-allowed}
   <h2 id="vTitle"></h2><div class="sub" id="vSub" style="margin-top:-6px"></div>
   <div class="vbody" id="vBody"></div>
   <div class="acts"><span></span><button class="btn p" id="vClose">Close</button></div>
+</div></div>
+
+<div class="ov" id="drov"><div class="modal" style="max-width:660px">
+  <h2>Done report</h2>
+  <div class="sub" style="margin-top:-6px">Pick a month. Every section is written from that month's tasks, kept within the form's character limits (spaces count), and downloaded as a text file.</div>
+  <div class="g2"><div><label>Month</label><select id="drM"></select></div><div><label>Year</label><select id="drY"></select></div></div>
+  <div class="g2"><div><label>Whose tasks</label><select id="drWho"></select></div><div><label>Name of the Doer</label><input type="text" id="drDoer" placeholder="Full name"></div></div>
+  <div class="g2"><div><label>Name of the Founder</label><input type="text" id="drFN" placeholder="Full name"></div><div><label>Founder's email</label><input type="text" id="drFE" placeholder="founder@email.com" autocapitalize="none"></div></div>
+  <details class="drx"><summary>Results this month <span class="sub">(optional, makes Impact measurable)</span></summary>
+    <div class="sub" style="margin:6px 0 8px">Use a % change like +306% or a before/after like 1,200 to 4,872. Saved per month.</div>
+    <div class="g2"><div><label>Website views / traffic</label><input type="text" id="drMv" placeholder="+306%"></div><div><label>Leads / sign-ups</label><input type="text" id="drMl" placeholder="+40% or 30 to 42"></div></div>
+    <div class="g2"><div><label>Conversion rate</label><input type="text" id="drMc" placeholder="2.1% to 3.4%"></div><div><label>Engagement (likes, opens, clicks)</label><input type="text" id="drMe" placeholder="+25%"></div></div>
+    <div><label>Other result</label><input type="text" id="drMo" placeholder="e.g. 12 new course enrollments"></div>
+    <div><label>Challenges or constraints to mention</label><input type="text" id="drCh" placeholder="e.g. Kajabi's customization limits slowed the course rebuild"></div>
+    <div><label>Doer University certification</label><input type="text" id="drCert" placeholder="Leave blank if none this month"></div>
+  </details>
+  <div id="drOut"></div>
+  <div class="acts"><button class="btn" id="drClose">Close</button><div style="display:flex;gap:8px"><button class="btn" id="drDl" style="display:none">Download edited</button><button class="btn p" id="drGo">Generate &amp; download</button></div></div>
 </div></div>
 
 <script>
@@ -1015,7 +1038,7 @@ function applyRole(){
   document.querySelector('.pp').style.display='';
   $('addPerson').style.display=isAdmin()?'':'none';
   if($('fWho')._dd)$('fWho')._dd.style.display='';
-  $('dPeople').style.display=isAdmin()?'':'none';$('dUsers').style.display=isSuper()?'':'none';
+  $('dPeople').style.display=isAdmin()?'':'none';$('dUsers').style.display=isSuper()?'':'none';$('dDone').style.display=isSuper()?'':'none';$('drBtn').style.display=isSuper()?'':'none';
   $('dhead').innerHTML=`<span style="border:2px solid rgba(255,255,255,.55);border-radius:50%;display:inline-grid">${avH(me.u,46)}</span><div><b style="font-size:17px;display:block">${esc(me.name)}</b><span style="font-size:12px;opacity:.85">@${esc(me.u)} · ${ROLES[me.role]||me.role}</span></div>`;
   $('acct').innerHTML=`${avH(me.u,26)}<span>${esc(me.name)}</span><span class="rb">${ROLES[me.role]||me.role}</span>`;
   render();
@@ -1114,7 +1137,7 @@ $('ham').onclick=()=>setMenu(!document.body.classList.contains('menu-open'));
 $('dbg').onclick=()=>setMenu(false);
 document.querySelectorAll('#drawer [data-act]').forEach(b=>b.onclick=()=>{
   const a=b.dataset.act;setMenu(false);
-  setTimeout(()=>{if(a==='acct')$('acct').click();else if(a==='people'){if(isAdmin())openPeople()}else if(a==='users')$('usersBtn').click();else if(a==='theme')$('theme').click();else if(a==='out')logout()},a==='theme'?0:280)});
+  setTimeout(()=>{if(a==='acct')$('acct').click();else if(a==='people'){if(isAdmin())openPeople()}else if(a==='users')$('usersBtn').click();else if(a==='done'){if(isSuper())openDR()}else if(a==='theme')$('theme').click();else if(a==='out')logout()},a==='theme'?0:280)});
 document.querySelectorAll('[data-bv]').forEach(b=>b.onclick=()=>{if(b.dataset.bv!==view)switchView(b.dataset.bv)});
 $('bAdd').onclick=()=>$('add').click();
 $('sbg').onclick=()=>{open=null;render()};
@@ -1570,6 +1593,214 @@ document.addEventListener('keydown',e=>{
   insText(ta,'\n'+m[1]+mk+' ');
 });
 
+/* ================= Done Report generator (super admin) =================
+   Builds the monthly Done Report from the tracker's tasks, following SOP-OPNS-92-2024:
+   Highlights 160 · Summary 650 · Impact 600 · Working Well 300 · Achievements 300 · Challenges 300 · Action Items 300
+   (every character counts, spaces included). WE / OUR / US voice throughout.
+   Impact = results · What's Working Well = insights · Achievements = deliverables & milestones. */
+const DR_SECT=[['highlight','Highlights of the Month',160],['summary','Summary',650],['impact','Impact to Your Business',600],['working',"What's Been Working Well",300],['achievements','Achievements',300],['challenges','Challenges',300],['actions','Action Items',300]];
+const DR_CAT=[
+  {k:'fix',re:/\b(fix|fixe[sd]|fixing|bug|error|broken|repair|debug|patch|resolv|troubleshoot|glitch)/i,one:'fix',many:'fixes',res:'a more reliable experience with fewer drop-offs'},
+  {k:'seo',re:/\b(seo|keyword|meta|backlink|sitemap|schema|search console|alt text|index|serp|on-page)/i,one:'SEO improvement',many:'SEO improvements',res:'better search visibility and organic reach'},
+  {k:'analytics',re:/\b(analytic|ga4|tracking|pixel|gtm|tag manager|dashboard|utm|hotjar|clarity|metric)/i,one:'analytics setup',many:'analytics setups',res:'clearer data to guide our decisions'},
+  {k:'email',re:/\b(email|e-mail|newsletter|campaign|nurture|mailchimp|activecampaign|klaviyo|broadcast|drip)/i,one:'email campaign',many:'email campaigns',res:'more consistent nurturing of our audience'},
+  {k:'auto',re:/\b(automat|zap|workflow|integrat|webhook|make\.com|n8n|trigger|sync)/i,one:'automation',many:'automations',res:'less manual work and faster follow-up'},
+  {k:'course',re:/\b(course|kajabi|module|lesson|portal|membership|teachable|thinkific|student)/i,one:'course update',many:'course updates',res:'a smoother learning experience for students'},
+  {k:'page',re:/\b(page|homepage|landing|website|site|web|header|footer|section|wordpress|wix|webflow|shopify|form|checkout|funnel)/i,one:'page/site build',many:'page/site builds',res:'a stronger site experience and more paths to convert visitors'},
+  {k:'content',re:/\b(post|content|blog|article|caption|reel|video|graphic|design|carousel|canva|thumbnail|copy|social|instagram|facebook|linkedin|tiktok|youtube|story)/i,one:'content piece',many:'content pieces',res:'a steadier brand presence and audience engagement'},
+  {k:'admin',re:/\b(meeting|call|research|audit|review|report|plan|document|sop|onboard|organi[sz]e|clean)/i,one:'planning/review task',many:'planning/review tasks',res:'clearer priorities and documented processes'},
+  {k:'other',re:/[\s\S]/,one:'other task',many:'other tasks',res:'steady progress on day-to-day operations'}];
+const DR_ISSUE=/\b(block|issue|delay|limit|error|wait|access|bug|stuck|problem|approval|constraint|pending|fail|broke|slow|can'?t|cannot|unable)/i;
+
+const drClean=s=>String(s||'').replace(/\s+/g,' ').trim();
+/* cut at a word boundary, never over n */
+function drCut(s,n){s=drClean(s);if(s.length<=n)return s;let c=s.slice(0,n);const i=c.lastIndexOf(' ');if(i>n*0.5)c=c.slice(0,i);return c.replace(/[\s,;:\-–(&/]+$/,'')}
+/* whole sentence that fits n, ending in a period */
+function drClip(s,n){s=drClean(s);if(s.length<=n)return s;return drCut(s,n-1)+'.'}
+const drAnd=a=>a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+const drPl=(n,c)=>n+' '+(n===1?c.one:c.many);
+const drQ=t=>'"'+drCut(String(t.title||'').replace(/[."]+$/,''),42)+'"';
+/* add sentences in priority order while they fit */
+function drPack(parts,n){let o='';for(const p of parts){if(!p)continue;const x=o?o+' '+p:p;if(x.length<=n)o=x}return o||drClip(parts.find(Boolean)||'',n)}
+/* first candidate that fits */
+function drFirst(c,n){c=c.filter(Boolean);return c.find(x=>x.length<=n)||drClip(c[c.length-1]||'',n)}
+/* "prefix a, b and c suffix" with as many items as fit */
+function drList(pre,items,suf,n){for(let k=items.length;k>0;k--){const x=pre+drAnd(items.slice(0,k))+suf;if(x.length<=n)return x}return ''}
+
+function drMetric(label,v){v=drClean(v);if(!v)return '';
+  if(/^-\s*\d[\d.,]*\s*%$/.test(v))return label+' dipped '+v.replace(/^-\s*/,'');
+  if(/^\+?\s*\d[\d.,]*\s*%$/.test(v))return label+' grew '+v.replace(/^\+\s*/,'');
+  const m=v.match(/^(.+?)\s*(?:to|→|->|-)\s*(.+)$/);if(m&&/\d/.test(m[1])&&/\d/.test(m[2]))return label+' moved from '+m[1]+' to '+m[2];
+  return label+' reached '+v}
+
+function drData(y,m,who){
+  const keys=[];let d=monday(new Date(y,m,1));if(d<new Date(y,m,1)&&d.getMonth()!==m)d=addD(d,7);
+  for(;d.getMonth()===m&&d.getFullYear()===y;d=addD(d,7))keys.push(iso(d));
+  const all=tasks.filter(t=>keys.includes(t.week)&&(!who||t.by===who)).sort((a,b)=>(a.created||0)-(b.created||0));
+  const done=all.filter(t=>t.status==='done'),prog=all.filter(t=>t.status==='progress'),todo=all.filter(t=>t.status!=='done'&&t.status!=='progress');
+  const catOf=t=>DR_CAT.find(c=>c.re.test(t.title||''))||DR_CAT.find(c=>c.re.test((t.title||'')+' '+(t.notes||'')));
+  all.forEach(t=>t._c=catOf(t));
+  const cnt={};done.forEach(t=>cnt[t._c.k]=(cnt[t._c.k]||0)+1);
+  const cats=DR_CAT.filter(c=>cnt[c.k]).sort((a,b)=>(a.k==='other')-(b.k==='other')||cnt[b.k]-cnt[a.k]);
+  const full=DR_CAT.filter(c=>c.k!=='other'&&cnt[c.k]>=2&&all.filter(t=>t._c===c).length===cnt[c.k]);
+  const vs=[...new Set(done.flatMap(t=>(String(t.title).match(/\bv\d+(?:\.\d+)*\b/gi)||[]).map(v=>v.toLowerCase())))]
+    .sort((a,b)=>a.slice(1).split('.').map(Number).reduce((r,x,i)=>r||x-(b.slice(1).split('.').map(Number)[i]||0),0));
+  const last=iso(new Date(y,m+1,0)),today=iso(new Date()),cutoff=today<last?today:last;
+  const open=all.filter(t=>t.status!=='done');
+  const overdue=open.filter(t=>t.due&&t.due<cutoff);
+  const issues=all.filter(t=>DR_ISSUE.test((t.notes||'')+' '+(t.followup||'')));
+  const linked=done.filter(t=>getLinks(t).some(Boolean)).length;
+  const team=[...new Set(done.map(t=>t.by).filter(Boolean))];
+  const total=all.length,pct=total?Math.round(done.length/total*100):0;
+  return {all,done,prog,todo,open,cnt,cats,full,vs,overdue,issues,linked,team,total,pct,
+    mon:MON[m],next:MON[(m+1)%12],key:y+'-'+pad(m+1),label:MON[m].slice(0,3)+' '+y,y};
+}
+
+function drBuild(D,M){
+  const N=Object.fromEntries(DR_SECT.map(s=>[s[0],s[2]]));
+  const outs=k=>D.cats.slice(0,k).map(c=>drPl(D.cnt[c.k],c));
+  const vtag=D.vs.length>1?D.vs[0]+'–'+D.vs[D.vs.length-1]:D.vs[0]||'';
+  const iter=D.vs.length?D.vs.length+' versioned iteration'+(D.vs.length>1?'s':'')+' ('+vtag+')':'';
+  const mets=[drMetric('website views',M.v),drMetric('leads',M.l),drMetric('our conversion rate',M.c),drMetric('engagement',M.e),drClean(M.o)].filter(Boolean);
+  const head=mets[0]||'';
+  const done=D.done.length,tot=D.total,top=D.cats[0];
+  const keyDone=D.done.filter(t=>t._c.k!=='admin'&&t._c.k!=='other').concat(D.done.filter(t=>t._c.k==='admin'||t._c.k==='other'));
+  const pend=D.open.length;
+
+  /* --- Challenges (computed first so Summary/Actions can reference them) --- */
+  const ch=[];
+  if(M.ch)ch.push(drClip(/^(we|our)\b/i.test(M.ch)?M.ch:'A key constraint we faced: '+M.ch,200).replace(/([^.!?])$/,'$1.'));
+  if(D.issues.length)ch.push(drList('We hit blockers noted on ',D.issues.slice(0,3).map(drQ),', which needed extra time to resolve.',180));
+  if(D.overdue.length)ch.push(D.overdue.length+' task'+(D.overdue.length>1?'s':'')+' slipped past '+(D.overdue.length>1?'their deadlines':'its deadline')+', which pushed back related work.');
+  if(D.prog.length)ch.push(D.prog.length+' task'+(D.prog.length>1?'s are':' is')+' still in progress and will carry into '+D.next+'.');
+  if(D.todo.length)ch.push(D.todo.length+' planned task'+(D.todo.length>1?'s were':' was')+' not started as we prioritized higher-impact work.');
+  if(!ch.length)ch.push('We had no major blockers this month. Our main focus was keeping quality high while delivering at pace, which required careful prioritization of incoming requests.');
+  const challenges=drPack(ch,N.challenges);
+
+  /* --- Action items --- */
+  const ac=[];
+  if(D.prog.length)ac.push(drList('In '+D.next+', we will finish '+D.prog.length+' in-progress task'+(D.prog.length>1?'s, incl. ':': '),D.prog.slice(0,3).map(drQ),'.',170)||'In '+D.next+', we will finish our '+D.prog.length+' in-progress tasks.');
+  if(D.todo.length)ac.push(drList('We will start '+D.todo.length+' pending task'+(D.todo.length>1?'s':'')+', beginning with ',D.todo.slice(0,1).map(drQ),'.',140)||'We will start our '+D.todo.length+' pending tasks.');
+  if(D.issues.length)ac.push('We will resolve the open blockers and flag new ones early.');
+  if(D.overdue.length)ac.push('We will reset deadlines for overdue items and review them weekly.');
+  if(M.ch)ac.push('We will plan around the constraints noted above so they do not slow delivery.');
+  ac.push(mets.length?'We will keep tracking these results to confirm the trend holds.':'We will track traffic, leads and conversions to measure the impact of each update.');
+  if(top&&top.k!=='other')ac.push('We will keep building on our '+top.many+' momentum.');
+  const actions=drPack(ac,N.actions);
+
+  /* --- Impact = results / outcomes --- */
+  const im=[];
+  if(mets.length)im.push(drList('Our work moved the numbers this month: ',mets,'.',330));
+  D.cats.filter(c=>c.k!=='other').slice(0,3).forEach((c,i)=>im.push((i?'Our ':'The ')+drPl(D.cnt[c.k],c)+(i?' delivered ':' gave us ')+c.res+'.'));
+  im.push(D.pct>=75?'Delivering '+done+' of '+tot+' planned tasks ('+D.pct+'%) kept our projects on schedule and gave us visible progress every week.'
+         :D.pct>=50?'Delivering '+done+' of '+tot+' planned tasks ('+D.pct+'%) kept our core priorities moving forward.'
+         :'We delivered '+done+' of '+tot+' planned tasks ('+D.pct+'%), focusing our effort where it mattered most.');
+  const impact=drPack(im,N.impact);
+
+  /* --- What's working well = insights --- */
+  const ww=[];
+  if(D.vs.length)ww.push('Iterative development and structured versioning ('+vtag+') let us test changes and deploy improvements safely.');
+  ww.push(D.pct>=75?'Weekly Monday-to-Friday planning with clear owners keeps delivery consistent.':'Breaking work into weekly tasks keeps our priorities visible and easy to adjust.');
+  if(top&&top.k!=='other'&&D.cnt[top.k]>=2)ww.push('Batching similar '+top.many+' together speeds up delivery.');
+  if(done&&D.linked/done>=0.5)ww.push('Linking each deliverable to its task makes reviews fast and documented.');
+  if(D.team.length>1)ww.push('Clear ownership across '+D.team.length+' team members keeps handoffs smooth.');
+  const working=drPack(ww,N.working);
+
+  /* --- Achievements = deliverables & milestones --- */
+  const ach=[];
+  const ol=outs(6);
+  ach.push(done?(drList('We delivered '+done+' completed task'+(done===1?'':'s')+': ',ol,'.',170)||'We delivered '+done+' completed tasks.')
+    :'We planned '+tot+' task'+(tot>1?'s':'')+' and moved '+D.prog.length+' into progress; deliverables will land in '+D.next+'.');
+  if(iter)ach.push('We shipped '+iter+'.');
+  D.full.slice(0,1).forEach(c=>ach.push('We completed 100% of our planned '+c.many+'.'));
+  const ms=drList('Key milestones: ',keyDone.slice(0,4).map(drQ),'.',N.achievements);
+  const achievements=drPack([ach[0],ms,...ach.slice(1)],N.achievements);
+
+  /* --- Highlights (160) --- */
+  const q2=outs(2),q1=outs(1);
+  const highlight=drFirst([
+    q2.length&&'In '+D.mon+', we completed '+done+' of '+tot+' tasks ('+D.pct+'%), incl. '+drAnd(q2)+(head?', and '+head:'')+'.',
+    q2.length&&'In '+D.mon+', we completed '+done+' of '+tot+' tasks ('+D.pct+'%)'+(head?' and '+head:', incl. '+drAnd(q2))+'.',
+    head&&'In '+D.mon+', we completed '+done+' of '+tot+' tasks ('+D.pct+'%) and '+head+'.',
+    'We completed '+done+' of '+tot+' tasks ('+D.pct+'%)'+(q1.length?', incl. '+q1[0]:'')+(head?'; '+head:'')+'.',
+    'We completed '+done+' of '+tot+' tasks ('+D.pct+'%) in '+D.mon+'.'],N.highlight);
+
+  /* --- Summary (650): condensed story of the sections above, nothing new --- */
+  const adj=D.pct>=75?'strong':D.pct>=50?'steady':'busy';
+  const sm=[
+    D.mon+' was a '+adj+' month for our team.',
+    drList('We completed '+done+' of '+tot+' planned tasks ('+D.pct+'%), delivering ',outs(5),'.',240)||'We completed '+done+' of '+tot+' planned tasks ('+D.pct+'%).',
+    iter?'We also shipped '+iter+'.':'',
+    drList('Highlights include ',keyDone.slice(0,3).map(drQ),'.',170),
+    mets.length?drList('These updates contributed to real results: ',mets.slice(0,2),'.',160)
+      :(top&&top.k!=='other'?'This work is giving us '+top.res+'.':''),
+    D.vs.length?'Structured versioning continues to make our releases safer.':'Weekly planning continues to keep our delivery on track.',
+    pend?'We are carrying '+pend+' open task'+(pend>1?'s':'')+' into '+D.next+', and the sections below show how we will close '+(pend>1?'them':'it')+'.'
+        :'See the sections below for the results and our next steps.'];
+  const summary=drPack(sm,N.summary);
+
+  const cert=drClean(M.cert)||'No Doer University certification was attained this month. We will continue building our skills through hands-on project work.';
+  return {highlight,summary,impact,working,achievements,challenges,actions,cert};
+}
+
+function drText(D,R,info){
+  const L=[];const hr='='.repeat(60);
+  L.push('DONE REPORT',hr,'Date Covered: '+D.label,'Name of the Founder: '+(info.fn||''),"Founder's Email: "+(info.fe||''),'Name of the Doer: '+(info.doer||''),"Doer's Email: ",'');
+  DR_SECT.forEach(([k,t,n])=>{L.push(t.toUpperCase()+'  ('+R[k].length+'/'+n+' characters)',R[k],'')});
+  L.push('DOER UNIVERSITY CERTIFICATION ATTAINED FOR YOUR BUSINESS',R.cert,'');
+  L.push(hr,'REFERENCE ONLY (not part of the form): tasks counted for '+D.mon+' '+D.y,
+    'Total '+D.total+' · Done '+D.done.length+' · In progress '+D.prog.length+' · Not started '+D.todo.length+' · Completion '+D.pct+'%','');
+  const grp=(h,a)=>{if(!a.length)return;L.push(h);a.forEach(t=>L.push('- ['+t._c.one+'] '+drClean(t.title)+(t.by?' ('+t.by+')':'')+(t.due?' · due '+t.due:'')));L.push('')};
+  grp('DONE',D.done);grp('IN PROGRESS',D.prog);grp('NOT STARTED',D.todo);
+  L.push('Generated by Task Tracker on '+new Date().toLocaleString());
+  return L.join('\r\n');
+}
+
+function drDownload(name,text){
+  const b=new Blob(['﻿'+text],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);
+}
+
+const drov=$('drov');let drLast=null;
+const drPrefs=()=>{try{return JSON.parse(localStorage.getItem('drPrefs')||'{}')}catch(e){return{}}};
+const drMKeys=[['drMv','v'],['drMl','l'],['drMc','c'],['drMe','e'],['drMo','o'],['drCh','ch'],['drCert','cert']];
+function drLoadMetrics(){const k='dr_'+$('drY').value+'-'+pad(+$('drM').value+1);let o={};try{o=JSON.parse(localStorage.getItem(k)||'{}')}catch(e){}drMKeys.forEach(([id,f])=>$(id).value=o[f]||'')}
+function drReadMetrics(){const o={};drMKeys.forEach(([id,f])=>o[f]=$(id).value.trim());try{localStorage.setItem('dr_'+$('drY').value+'-'+pad(+$('drM').value+1),JSON.stringify(o))}catch(e){}return o}
+function openDR(){
+  if(!isSuper())return;
+  const now=new Date(),pm=new Date(now.getFullYear(),now.getMonth()-1,1),y0=now.getFullYear();
+  fillSel2('drM',MON.map((n,i)=>`<option value="${i}">${n}</option>`).join(''),String(pm.getMonth()));
+  let ys='';for(let y=y0-3;y<=y0+1;y++)ys+=`<option>${y}</option>`;fillSel2('drY',ys,String(pm.getFullYear()));
+  if(!drov._init){$('drM').value=pm.getMonth();$('drY').value=pm.getFullYear();drov._init=1}
+  fillSel2('drWho','<option value="">Everyone (whole team)</option>'+people.map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join(''),'');
+  const pr=drPrefs();$('drFN').value=pr.fn||'';$('drFE').value=pr.fe||'';$('drDoer').value=pr.doer||me.name||'';
+  enhanceAll();drLoadMetrics();$('drOut').innerHTML='';$('drDl').style.display='none';drLast=null;
+  drov.classList.add('show');
+}
+function drRenderPreview(D,R){
+  $('drOut').innerHTML=`<div class="sub" style="margin-top:4px">Downloaded <b>Done Report - ${D.mon} ${D.y}.txt</b> · ${D.total} tasks counted (${D.done.length} done). Edit below and press “Download edited” if you change anything.</div>`+
+    DR_SECT.map(([k,t,n])=>`<div class="drsec" data-k="${k}"><label>${t}<span class="drc" data-c="${k}">${R[k].length}/${n}</span></label><textarea data-dr="${k}" maxlength="${n}">${esc(R[k])}</textarea></div>`).join('')+
+    `<div class="drsec" data-k="cert"><label>Doer University Certification</label><textarea data-dr="cert">${esc(R.cert)}</textarea></div>`;
+  $('drOut').querySelectorAll('[data-dr]').forEach(ta=>ta.oninput=()=>{const k=ta.dataset.dr,c=$('drOut').querySelector('[data-c="'+k+'"]');if(drLast)drLast.R[k]=ta.value;if(c){const n=DR_SECT.find(s=>s[0]===k)[2];c.textContent=ta.value.length+'/'+n;c.classList.toggle('over',ta.value.length>n)}});
+}
+function drInfo(){const info={fn:$('drFN').value.trim(),fe:$('drFE').value.trim(),doer:$('drDoer').value.trim()};try{localStorage.setItem('drPrefs',JSON.stringify(info))}catch(e){}return info}
+$('drBtn').onclick=openDR;
+$('drClose').onclick=()=>drov.classList.remove('show');
+drov.onclick=e=>{if(e.target===drov)drov.classList.remove('show')};
+addEventListener('keydown',e=>{if(e.key==='Escape')drov.classList.remove('show')});
+$('drM').onchange=$('drY').onchange=drLoadMetrics;
+$('drWho').onchange=()=>{if($('drWho').value)$('drDoer').value=$('drWho').value};
+$('drGo').onclick=()=>{
+  if(!isSuper())return;
+  const y=+$('drY').value,m=+$('drM').value,who=$('drWho').value;
+  const D=drData(y,m,who);
+  if(!D.total){$('drOut').innerHTML=`<div class="sub" style="color:#dc2626;margin-top:6px">No tasks found for ${MON[m]} ${y}${who?' for '+esc(who):''}. Pick another month.</div>`;$('drDl').style.display='none';return}
+  const R=drBuild(D,drReadMetrics()),info=drInfo();
+  drLast={D,R};drDownload('Done Report - '+D.mon+' '+D.y+'.txt',drText(D,R,info));
+  drRenderPreview(D,R);$('drDl').style.display='';
+};
+$('drDl').onclick=()=>{if(!drLast)return;
+  drDownload('Done Report - '+drLast.D.mon+' '+drLast.D.y+'.txt',drText(drLast.D,drLast.R,drInfo()))};
 /* start */
 (async function boot(){
   try{
