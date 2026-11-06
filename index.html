@@ -273,6 +273,7 @@ body.locked .appbar,body.locked .bnav,body.locked .drawer,body.locked .dbg{displ
 .vbtn{margin-top:8px;font-size:13px;padding:6px 12px}
 .drx summary{cursor:pointer;font-weight:600;font-size:13px}.drx>div{margin-top:8px}
 .drwins{display:grid;gap:4px;max-height:210px;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--bg)}.drw{display:flex;gap:8px;align-items:flex-start;font-size:13px;font-weight:500;color:var(--fg,inherit);margin:0;cursor:pointer}.drw input{width:auto;margin-top:3px}.drw.r{opacity:.65}.drw em{font-style:normal;font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:6px;padding:0 5px;margin-left:4px}
+.bm{margin-top:12px;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--bg)}.bmh{font-weight:700;font-size:14px;margin-bottom:6px}.bms{margin-top:8px}.bmst{font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--acc,#4f46e5)}.bmg{font-size:12px;font-weight:600;color:var(--mut);margin:6px 0 2px}.bmi{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:3px 0 3px 4px}.bmx{color:#16a34a;font-weight:700;line-height:1.3}
 .drsec{margin-top:10px}.drsec label{display:flex;justify-content:space-between;gap:8px}.drc{font-weight:500}.drc.over{color:#dc2626}
 .drsec textarea{min-height:74px;resize:vertical;line-height:1.45}.drsec[data-k=summary] textarea,.drsec[data-k=impact] textarea{min-height:120px}
 .vbody{white-space:pre-wrap;word-break:break-word;max-height:55vh;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
@@ -570,11 +571,12 @@ input:disabled,textarea:disabled{opacity:.7;cursor:not-allowed}
   <div class="g2"><div><label>Whose tasks</label><select id="drWho"></select></div><div><label>Name of the Doer</label><input type="text" id="drDoer" placeholder="Full name"></div></div>
   <div class="g2"><div><label>Name of the Founder</label><input type="text" id="drFN" placeholder="Full name"></div><div><label>Founder's email</label><input type="text" id="drFE" placeholder="founder@email.com" autocapitalize="none"></div></div>
   <div><label>Key wins this month <span class="sub" style="font-weight:400">(the report is built around these; weekly tasks are kept to one line)</span></label><div id="drWins" class="drwins"></div></div>
-  <details class="drx"><summary>Results this month <span class="sub">(optional, makes Impact measurable)</span></summary>
+  <details class="drx"><summary>Results, focus &amp; challenges <span class="sub">(optional, makes the report sharper)</span></summary>
     <div class="sub" style="margin:6px 0 8px">Use a % change like +306% or a before/after like 1,200 to 4,872. Saved per month.</div>
     <div class="g2"><div><label>Website views / traffic</label><input type="text" id="drMv" placeholder="+306%"></div><div><label>Leads / sign-ups</label><input type="text" id="drMl" placeholder="+40% or 30 to 42"></div></div>
     <div class="g2"><div><label>Conversion rate</label><input type="text" id="drMc" placeholder="2.1% to 3.4%"></div><div><label>Engagement (likes, opens, clicks)</label><input type="text" id="drMe" placeholder="+25%"></div></div>
     <div><label>Other result</label><input type="text" id="drMo" placeholder="e.g. 12 new course enrollments"></div>
+    <div><label>Next month's focus (used in Action Items)</label><input type="text" id="drNext" placeholder="e.g. continue designing the XC Chen Music site and logo, and keep giving the team tech support"></div>
     <div><label>Challenges or constraints to mention</label><input type="text" id="drCh" placeholder="e.g. Kajabi's customization limits slowed the course rebuild"></div>
     <div><label>Doer University certification</label><input type="text" id="drCert" placeholder="Leave blank if none this month"></div>
   </details>
@@ -1640,11 +1642,11 @@ const drObj=r=>/^(the|a|an|our|my|all|new|each|every|both|this|these|\d)\b/i.tes
 /* noun-style titles: "Music 360 Membership Launch" -> "launched the Music 360 Membership" */
 const DR_NOUNV={launch:['launched','launch'],redesign:['redesigned','redesign'],setup:['set up','set up'],'set-up':['set up','set up'],update:['updated','update'],updates:['updated','update'],migration:['migrated','migrate'],integration:['integrated','integrate'],rebuild:['rebuilt','rebuild'],cleanup:['cleaned up','clean up'],refresh:['refreshed','refresh'],revamp:['revamped','revamp'],upgrade:['upgraded','upgrade'],optimization:['optimized','optimize'],build:['built','build'],creation:['created','create'],installation:['installed','install'],implementation:['implemented','implement'],overhaul:['overhauled','overhaul']};
 function drNounTitle(ti){const m=ti.match(/^(.+?)\s+([A-Za-z-]+)(\s+v\d+(?:\.\d+)*)?$/);if(!m)return null;const v=DR_NOUNV[m[2].toLowerCase()];if(!v)return null;return {past:v[0],base:v[1],rest:drObj(m[1])+(m[3]?' ('+m[3].trim()+')':'')}}
-function drPast(t){const ti=drTitle(t),v=drVerb(ti);if(v)return v.past+(v.rest?' '+drObj(v.rest):'');const nt=drNounTitle(ti);if(nt)return nt.past+' '+nt.rest;
+function drPast(t){const ti=drTitle(t),v=drVerb(ti);if(/^(tech(nical)? )?support\b/i.test(ti))return 'provided '+ti.charAt(0).toLowerCase()+ti.slice(1);if(v)return v.past+(v.rest?' '+drObj(v.rest):'');const nt=drNounTitle(ti);if(nt)return nt.past+' '+nt.rest;
   return (DR_ISSUE_T.test(ti)?'resolved ':'completed ')+drObj(ti)}
 function drFuture(t){const ti=drTitle(t),v=drVerb(ti);if(v)return v.base+(v.rest?' '+drObj(v.rest):'');const nt=drNounTitle(ti);if(nt)return nt.base+' '+nt.rest;return (DR_ISSUE_T.test(ti)?'resolve ':'complete ')+drObj(ti)}
 const DR_DBL=new Set(['set','get','put','plan','map','stop','ship','run','cut','swap','crop','hit','log','tag','chat','drop','sit']);
-function drGer(t){const ti=drTitle(t),v=drVerb(ti);
+function drGer(t){const ti=drTitle(t),v=drVerb(ti);if(/^(tech(nical)? )?support\b/i.test(ti))return 'Providing '+ti.charAt(0).toLowerCase()+ti.slice(1);
   const ger=b=>DR_DBL.has(b)?b+b.slice(-1)+'ing':/[^e]e$/.test(b)&&b!=='be'?b.slice(0,-1)+'ing':b+'ing';
   if(!v){const nt=drNounTitle(ti);if(nt)return drCap(ger(nt.base.split(' ')[0])+(nt.base.includes(' ')?' '+nt.base.split(' ').slice(1).join(' '):'')+' '+nt.rest);return (DR_ISSUE_T.test(ti)?'Resolving ':'Completing ')+drObj(ti)}
   return drCap(v.words.map(([b,pt])=>ger(b)+pt).join(' and ')+(v.rest?' '+drObj(v.rest):''))}
@@ -1675,12 +1677,12 @@ function drProblem(t){
   const sents=txt.split(/(?<=[.!?])\s+|\n+/).map(drClean).filter(Boolean);
   let prob=null,cause=null,fixed=null;
   for(const s of sents){
-    if(!prob&&DR_ISS.test(s)){const parts=s.split(/,?\s+(?:but|however|yet|although|though|whereas)\s+/i);prob=parts.reverse().find(x=>DR_ISS.test(x))||s}
+    if(!prob&&DR_ISS.test(s)){const parts=s.split(/,?\s+(?:but|however|yet|although|though|whereas)\s+|;\s*/i);prob=parts.reverse().find(x=>DR_ISS.test(x))||s}
     const c=s.match(/\b(?:related to|caused by|due to|because of|coming from|traced (?:it )?to|stems from|comes from|tied to)\s+([^.;,!?]+)/i);if(c&&!cause)cause=c[1];
     if(!fixed&&/\b(fixed|resolved|solved|now (?:works|working|shows|unlocked|accessible|visible|live)|working now|is live)\b/i.test(s))fixed=s;
   }
   if(!prob)return null;
-  prob=prob.replace(/^(and|so|then|but)\s+/i,'').replace(/[.!?]+$/,'');
+  prob=prob.replace(/^(and|so|then|but)\s+/i,'').replace(/[.!?]+$/,'').replace(/\s+and (were |was )?(fixed|resolved|sorted)( (them|it))?$/i,'');
   if(/^(The|It|This|They|That|These|Those|Some|Our|Users?|Students?|Customers?|Visitors?)\b/.test(prob))prob=prob.charAt(0).toLowerCase()+prob.slice(1);
   if(cause)cause=cause.replace(/^(the issue|this|it)\s+/i,'').trim();
   return {prob:drCut(prob,120),cause:cause?drCut(cause,60):'',fixed};
@@ -1725,7 +1727,7 @@ function drData(y,m,who){
   const open=all.filter(t=>t.status!=='done');
   return {all,done,prog,todo,open,key,routine,cands,S,vs,
     overdue:open.filter(t=>t.due&&t.due<cutoff),
-    resolved:done.filter(t=>t._p),openIssues:open.filter(t=>t._p),
+    resolved:done.filter(t=>t._p&&(DR_ISSUE_T.test(t.title)||t._s==='fix')&&!/\baudit|review|assessment/i.test(t.title)),openIssues:open.filter(t=>t._p),
     tested:done.some(t=>/\b(granted (?:her|him|my|our)sel(f|ves)|test (?:account|user|purchase)|as a (?:student|user|customer)|tested|own account)\b/i.test(txt(t))),
     mon:MON[m],next:MON[(m+1)%12],key_:y+'-'+pad(m+1),label:MON[m].slice(0,3)+' '+y,y,total:all.length};
 }
@@ -1760,88 +1762,110 @@ function drRoutine(D,form){const S=D.S,p=[];
   const what=S.news.length?'weekly newsletter'+(S.blog.length||S.blogFromNews?' and blog':'')+' updates':'recurring weekly tasks';
   return form==='short'?'Our '+what+' stayed on schedule.':'Our '+what+' stayed on schedule ('+drAnd(p)+').'}
 
-/* what a piece of work does for the business: [present-tense outcome, short form] */
-function drOutcome(t){const x=t.title+' '+(t.notes||''),T=t.title;
-  if(t._s==='fix'||(t._p&&t.status==='done')){const a=/course|kajabi|student|lesson|library|membership/i.test(x)?'students':/checkout|payment|buy|purchase/i.test(x)?'buyers':'visitors';
-    return ['removes a blocker for '+a+', so they get in without getting stuck or needing support','removes a blocker for '+a]}
-  if(/\baudit|review|assessment|analysis|test(ing)?\b/i.test(T))return /landing|page|site|funnel/i.test(T)
-    ?['shows us exactly which landing page features work and which need fixing, so our next changes target real gaps','shows us what to fix next']
-    :['gives us a clear, prioritized list of what to improve next','gives us a clear list of what to improve'];
-  if(/tracker|dashboard|\bsystem\b|\bsop\b|process|template|\bboard\b|planner/i.test(T))return ['gives us one clear place to plan, prioritize and follow up on work, so nothing slips through the cracks','keeps our work organized in one place'];
-  if(/(landing|sales|opt-?in|squeeze|funnel|signup|sign-up|registration) ?page|landing/i.test(T))return /text|copy|messag|headline|wording|content|cta/i.test(T)
-    ?['gives visitors a clearer, more compelling message, which supports more sign-ups','sharpens our message to visitors']
-    :['gives visitors a stronger path from interest to sign-up','strengthens our path to sign-up'];
-  if(/checkout|payment|pricing|price|offer|cart/i.test(T))return ['makes it easier for buyers to say yes and complete a purchase','makes buying easier'];
-  if(/home ?page/i.test(T))return ['strengthens first impressions for every visitor who lands on our site','strengthens first impressions'];
-  if(/course|kajabi|lesson|module|membership|portal|curriculum/i.test(T))return ['gives students a smoother, more reliable learning experience','improves the student experience'];
-  if(/\bseo\b|meta|sitemap|schema|keyword/i.test(T))return ['makes our pages easier to find on search, supporting organic traffic over time','supports search visibility'];
-  if(/automat|\bzap|integrat|webhook|workflow/i.test(T))return ['cuts manual work and makes follow-up faster and more consistent','cuts manual work'];
-  if(/e-?mail|sequence|nurture/i.test(T))return ['keeps subscribers engaged with consistent, timely messages','keeps subscribers engaged'];
-  if(/analytics|tracking|ga4|pixel/i.test(T))return ['gives us reliable data to measure what is working','gives us reliable data'];
-  if(/advent|calendar|event|webinar|launch|promo|campaign|challenge|giveaway|holiday|christmas|black friday/i.test(T))return ['sets us up for a stronger promotion and more engagement with our audience','sets up our next promotion'];
-  if(/page|website|site|menu|footer|header|form|banner/i.test(T))return ['keeps our website accurate and easier to navigate','improves our website'];
-  if(/post|reel|video|graphic|content|social/i.test(T))return ['keeps our brand visible and engaging','keeps our brand visible'];
-  return ['moves our priorities forward and keeps operations running smoothly','moves our priorities forward'];
-}
-function drInsight(t,D){const T=t.title,v=D.vs(t);
-  if(t._p&&t.status==='done')return D.tested?'Testing as a real user and logging the details in our notes helped us pinpoint issues fast.':'Documenting each issue in detail helped us troubleshoot faster.';
-  if(/\baudit|review|assessment/i.test(T))return 'Auditing before we change things lets us fix what matters most first instead of guessing.';
-  if(/tracker|dashboard|\bsystem\b|\bsop\b|template|planner/i.test(T))return 'Building our own '+(/tracker/i.test(T)?'task tracker':'system')+(v?' in versions ('+v+')':'')+' keeps priorities, owners and follow-ups visible in one place.';
-  if(/landing|sales page/i.test(T)&&/text|copy|messag|headline|wording/i.test(T))return 'Refining page copy section by section lets us sharpen our message without a full rebuild.';
-  if(v)return 'Shipping in versions ('+v+') lets us improve step by step and roll out changes safely.';
-  return '';
-}
+/* what a piece of work does for the business. Every rule has its own benefit wording so no two
+   sentences repeat. Returns {k, now (full outcome), short (summary form)}. */
+const DR_OUT=[
+  ['emailauth',t=>/\b(spf|dkim|dmarc)\b/i.test(t.title),'strengthens email authentication, improves deliverability, and keeps legitimate emails out of spam','improves email deliverability'],
+  ['audit',t=>/\baudit|functionality (check|review|test)/i.test(t.title)&&/landing|funnel|page|site|checkout/i.test(t.title),'ensures smooth transitions throughout the funnel, improving navigation and user experience','smooths the funnel experience'],
+  ['auditg',t=>/\baudit|assessment|review\b/i.test(t.title),'gives us a clear, prioritized list of improvements so effort goes where it matters most','sharpens our priorities'],
+  ['tracker',t=>/tracker|dashboard|\bsystem\b|\bsop\b|planner|\bboard\b/i.test(t.title),'centralizes planning and follow-ups, improving accountability and team coordination','improves team coordination'],
+  ['copy',t=>/(landing|sales|opt-?in|home|about)\s*page|landing|website/i.test(t.title)&&/\b(text|copy|messag\w*|headline|wording|cta)\b/i.test(t.title),'strengthens messaging, improves clarity, and encourages conversions','strengthens our messaging'],
+  ['code',t=>/custom (code|css|html|js|javascript)|animation|interaction|visual|\bcss\b|javascript/i.test(t.title+' '+(t.notes||'')),'adds polished interactions and visuals that make our pages more engaging and memorable','makes our pages more engaging'],
+  ['logo',t=>/\blogo|brand(ing)?\b|style guide/i.test(t.title),'builds a consistent, recognizable brand identity','strengthens our brand identity'],
+  ['payfix',t=>/checkout|payment|cart/i.test(t.title)&&(DR_ISSUE_T.test(t.title)||!!t._p),'restores a smooth checkout so buyers can complete their purchase without friction','restores a smooth checkout'],
+  ['access',t=>/course|kajabi|library|lesson|portal|membership/i.test(t.title)&&(DR_ISSUE_T.test(t.title)||(!!t._p&&/lock|access/i.test(t._p.prob))),'restores course functionality and ensures uninterrupted student access','restores student access'],
+  ['fix',t=>DR_ISSUE_T.test(t.title),'restores full functionality and gives visitors a smoother, error-free experience','restores full functionality'],
+  ['newsite',t=>/(design|build|create|develop|launch)\w*\b.*\b(site|website)\b/i.test(t.title)||/\bnew (site|website)\b/i.test(t.title),'lays the foundation for a professional, on-brand web presence','builds a stronger web presence'],
+  ['form',t=>/\b(form|opt-?in|sign-?up|pop-?up)\b/i.test(t.title),'captures leads reliably and routes them to the right place','captures leads reliably'],
+  ['mobile',t=>/mobile|responsive|tablet/i.test(t.title),'ensures our pages look and work well on every device','improves the mobile experience'],
+  ['speed',t=>/speed|performance|load time|optimi[sz]e image|compress/i.test(t.title),'speeds up load times and reduces drop-offs','speeds up our pages'],
+  ['links',t=>/\blinks?\b|redirect|404|broken/i.test(t.title),'eliminates dead ends so visitors always reach the right page','removes dead ends'],
+  ['landing',t=>/landing|sales page|funnel|opt-?in page/i.test(t.title),'gives visitors a clearer path from interest to sign-up','strengthens our sign-up path'],
+  ['buy',t=>/pricing|price|offer|product|checkout/i.test(t.title),'makes it easier for buyers to say yes and complete a purchase','simplifies buying'],
+  ['home',t=>/home ?page/i.test(t.title),'strengthens first impressions and guides visitors to our key offers','strengthens first impressions'],
+  ['grant',t=>/grant|enrol|access|membership|offer/i.test(t.title)&&/course|kajabi|member/i.test(t.title+' '+(t.notes||'')),'ensures students get the right access the moment they enrol','streamlines student access'],
+  ['course',t=>/course|kajabi|lesson|module|curriculum|worksheet/i.test(t.title),'gives students a clearer, more engaging learning experience','improves the student experience'],
+  ['seo',t=>/\bseo\b|meta|sitemap|schema|keyword|alt text/i.test(t.title),'improves search visibility and supports long-term organic traffic','improves search visibility'],
+  ['auto',t=>/automat|\bzap|integrat|webhook|workflow/i.test(t.title),'cuts manual work and keeps follow-ups consistent','cuts manual work'],
+  ['email',t=>/e-?mail|sequence|nurture/i.test(t.title),'nurtures subscribers with timely, consistent messages','nurtures our subscribers'],
+  ['data',t=>/analytics|tracking|ga4|pixel/i.test(t.title),'gives us reliable data to measure what works','improves our data'],
+  ['book',t=>/calendar|booking|calendly|schedul/i.test(t.title)&&!/content calendar|advent/i.test(t.title),'makes booking calls simple for prospects and clients','simplifies booking'],
+  ['promo',t=>/advent|event|webinar|launch|promo|campaign|challenge|giveaway|holiday|christmas|black friday/i.test(t.title),'sets up our seasonal promotion to drive engagement and sales','prepares our next promotion'],
+  ['support',t=>/support|help|assist|troubleshoot/i.test(t.title),'keeps the team unblocked and productive','keeps the team productive'],
+  ['page',t=>/page|website|site|menu|footer|header|banner|section/i.test(t.title),'keeps our website accurate, current and easy to navigate','keeps our website current'],
+  ['content',t=>/post|reel|video|graphic|content|social|caption/i.test(t.title),'keeps our brand visible and engaging online','boosts brand visibility'],
+  ['other',()=>true,'moves our priorities forward and keeps operations running smoothly','moves our priorities forward']];
+function drOutcome(t){const r=DR_OUT.find(o=>o[1](t));return {k:r[0],now:r[2],short:r[3]}}
+
+/* insights for What's Working Well: short, "why it works" statements */
+function drInsights(D,list){const ins=[],txt=D.all.map(t=>t.title+' '+(t.notes||'')).join(' \n ');
+  if(D.tested||D.resolved.length)ins.push('Testing from the user\'s perspective helped us identify issues early and improve overall functionality.');
+  if(list.some(t=>/\baudit/i.test(t.title)))ins.push('Auditing before making changes focused our effort on the fixes with the biggest impact.');
+  if(D.all.some(t=>/tracker|dashboard|\bsystem\b|planner/i.test(t.title)))ins.push('Centralizing task management strengthened accountability, streamlined follow-ups, and improved team coordination.');
+  if(/custom (code|css|html|js)|coded|coding/i.test(txt))ins.push('Custom code gave us more control over design, animation, and page functionality.');
+  if(list.some(t=>/\b(text|copy|headline|messag)/i.test(t.title)))ins.push('Refining copy section by section sharpened our message without a full rebuild.');
+  if(list.some(t=>D.vs(t)))ins.push('Releasing in versions let us improve steadily while keeping live pages stable.');
+  ins.push('Weekly planning ensured clear priorities, efficient workflows, and timely execution.');
+  if(D.S.blogFromNews)ins.push('Repurposing each newsletter into a blog post doubles the value of every piece of content.');
+  return ins}
+
+const drCode=D=>/custom (code|css|html|js|javascript)|coded|coding|\bcss\b|javascript/i.test(D.all.map(t=>t.title+' '+(t.notes||'')+' '+(t.followup||'')).join(' '));
+const drKaj=D=>/kajabi/i.test(D.all.map(t=>t.title+' '+(t.notes||'')).join(' '));
+const drSupport=D=>D.done.concat(D.open).some(t=>/tech(nical)? support|support (for|to) (the )?team|team support|help(ed|ing)? (the )?team|assist(ed)? (the )?team/i.test(t.title+' '+(t.notes||'')));
 
 function drChallengeLine(t,n){const p=t._p;if(!p)return '';
   if(t.status!=='done')return drClip(drGer(t)+' is still open: '+p.prob+(p.cause?', linked to '+p.cause:'')+'.',n);
-  const lead=p.prob.match(/^(the|it|this|they|our|students?|users?|customers?|visitors?|that|these|those|some)\b/i)?p.prob:'we found that '+(/^[A-Z][a-z]/.test(p.prob)?p.prob.charAt(0).toLowerCase()+p.prob.slice(1):p.prob);
-  return drClip(drCap(lead)+(p.cause?', which we linked to '+p.cause:'')+'. We worked through it and resolved it this month.',n)}
+  let pr=p.prob.replace(/\bstill appear(ed|s)\b/i,'remained').replace(/\bstill (showed|shows)\b/i,'kept showing').replace(/\bstill\s+/i,'');
+  pr=/^(the|it|this|they|our|students?|users?|customers?|visitors?|that|these|those|some)\b/i.test(pr)?pr:'we found that '+(/^[A-Z][a-z]/.test(pr)?pr.charAt(0).toLowerCase()+pr.slice(1):pr);
+  const noun=/lock|access|login|library|enrol/i.test(p.prob)?'the access issue':'the issue';
+  let c='';if(p.cause)c=/\b(new|website|site|update|migration|theme|change|setup|launch|redesign)\b/i.test(p.cause)?' following '+p.cause.replace(/^(the )?/,'the ').replace(/^the the /,'the ')+(/setup|update|migration|launch|change|redesign/i.test(p.cause)?'':' setup'):', caused by '+p.cause;
+  return drClip(drCap(pr)+c+', but we resolved '+noun+' this month.',n)}
 
 function drBuild(D,M,winsIn){
   const N=Object.fromEntries(DR_SECT.map(s=>[s[0],s[2]]));
   const wins=(winsIn&&winsIn.length?winsIn:D.cands.slice(0,3)).filter(t=>D.done.includes(t));
   const others=D.cands.filter(t=>!wins.includes(t));
-  const named=new Set(wins);
   const mets=[drMetric('website views',M.v),drMetric('leads',M.l),drMetric('our conversion rate',M.c),drMetric('engagement',M.e),drClean(M.o)].filter(Boolean);
   const P=(t,n)=>drShort(drPast(t),n);
   const outs=drOutputs(D,new Set([...wins,...others.slice(0,2)]));
+  const nextOpen=D.open.filter(t=>!D.openIssues.includes(t)&&!t._r);
+  const pageWork=D.done.some(t=>/page|website|site|landing|funnel|homepage/i.test(t.title)&&!t._r);
 
   /* Highlights: the key wins only, never routine work */
   const hc=[];
-  for(let k=Math.min(3,wins.length);k>=1;k--)for(const len of [80]){const w=drAnd(wins.slice(0,k).map(t=>P(t,len)));
-    if(mets[0])hc.push('We '+w+', and '+mets[0]+'.');hc.push('We '+w+'.')}
+  for(let k=Math.min(3,wins.length);k>=1;k--){const w=drAnd(wins.slice(0,k).map(t=>P(t,80)));if(mets[0])hc.push('We '+w+', and '+mets[0]+'.');hc.push('We '+w+'.')}
   for(const len of [55,40])hc.push('We '+drAnd(wins.slice(0,2).map(t=>P(t,len)))+'.');
   if(!wins.length)hc.push(mets[0]?'In '+D.mon+', '+mets[0]+' as we kept our website and content on track.':'In '+D.mon+', we kept our website and content on track and set up next month\'s work.');
   const highlight=drFirst(hc,N.highlight);
 
-  /* Impact = results */
+  /* Impact = results. Group work that shares a benefit so nothing is repeated. */
   const im=[];
   if(mets.length)im.push(drList('Our work moved the numbers this month: ',mets,'.',300));
-  wins.forEach(t=>im.push(drGer(t).replace(/^Our work on/,'Our work on')+' '+drOutcome(t)[0]+'.'));
-  others.slice(0,2).forEach(t=>im.push(drGer(t)+' '+drOutcome(t)[0]+'.'));
-  if(D.routine.length)im.push('Our weekly '+(D.S.news.length?'newsletter and blog updates keep':'routine work keeps')+' the website active between bigger releases.');
+  const groups=[];[...wins,...others].forEach(t=>{const o=drOutcome(t);let g=groups.find(x=>x.k===o.k);if(!g){g={k:o.k,o,ts:[]};groups.push(g)}g.ts.push(t)});
+  groups.forEach(g=>{const subj=drAnd(g.ts.slice(0,2).map((t,i)=>{const s=drGer(t);return i?s.charAt(0).toLowerCase()+s.slice(1):s}));
+    const verb=g.ts.length>1?g.o.now.replace(/^(\w+?)(s)\b/,'$1').replace(/^(\w+?)ie$/,'$1y'):g.o.now;
+    im.push(subj+' '+(g.ts.length>1?drPlVerb(g.o.now):g.o.now)+'.')});
   if(!im.length)im.push(D.prog.length?'The impact of this month will show in '+D.next+' once we finish '+drShort(drObj(drFuture(D.prog[0]).replace(/^(set up|clean up|\w+)\s+/,'')),80)+', which is already underway.':'This month focused on groundwork, so its impact will show as we deliver in '+D.next+'.');
+  if(D.routine.length)im.push('Our weekly '+(D.S.news.length?'newsletter and blog updates keep':'routine work keeps')+' the website active between bigger releases.');
   const impact=drPack(im,N.impact);
 
   /* What's working well = insights */
-  const ww=[...new Set([...wins,...others].map(t=>drInsight(t,D)).filter(Boolean))];
-  ww.push('Planning our work week by week keeps priorities clear for both of us.');
-  if(D.S.blogFromNews)ww.push('Repurposing each '+(D.S.kit?'Kit ':'')+'newsletter into a blog post gets two uses from one piece of writing.');
-  const working=drPack(ww,N.working);
+  const working=drPack(drInsights(D,[...wins,...others]),N.working);
 
   /* Achievements = deliverables & milestones */
   const ach=[];
   ach.push(drList('We ',wins.map(t=>P(t,75)),'.',200));
   ach.push(drList('We also ',[...others.slice(0,2).map(t=>P(t,55)),...outs.map(o=>o.txt)],'.',160));
   ach.push(drRoutine(D,'long'),drRoutine(D,'short'));
-  let achievements=drPack(ach,N.achievements);
-  if(!achievements)achievements='We laid the groundwork for '+D.next+"'s deliverables.";
+  const achievements=drPack(ach,N.achievements)||'We laid the groundwork for '+D.next+"'s deliverables.";
 
   /* Challenges */
   const ch=[];
   if(M.ch)ch.push(drClip(/^(we|our)\b/i.test(M.ch)?M.ch:'A key constraint we faced: '+M.ch,200).replace(/([^.!?])$/,'$1.'));
   D.openIssues.slice(0,2).forEach(t=>ch.push(drChallengeLine(t,200)));
-  D.resolved.slice(0,2).forEach(t=>ch.push(drChallengeLine(t,220)));
+  D.resolved.slice(0,1).forEach(t=>ch.push(drChallengeLine(t,180)));
+  if(drCode(D)&&!/custom code/i.test(M.ch||''))ch.push((drKaj(D)?"Kajabi's":'Our platform\'s')+' built-in features also limited page design and functionality, so we used custom code to enhance interactions, animations, and visuals across updated pages.');
+  D.resolved.slice(1,2).forEach(t=>ch.push(drChallengeLine(t,150)));
   if(D.overdue.length)ch.push(drList('We ran past our target date on ',D.overdue.slice(0,2).map(t=>drShort(drObj(drFuture(t).replace(/^(set up|clean up|\w+)\s+/,'')),50)),', as other priorities took precedence.',170));
   const prog1=D.prog.find(t=>!D.openIssues.includes(t));
   if(prog1)ch.push(drShort(drVerb(drTitle(prog1))?drGer(prog1):'Our work on '+drObj(drTitle(prog1)),90)+' is still in progress and carries into '+D.next+'.');
@@ -1850,17 +1874,18 @@ function drBuild(D,M,winsIn){
 
   /* Action items */
   const ac=[];
+  if(M.next){const f=drClean(M.next).replace(/[.!]+$/,'');ac.push(drClip(/^we\b/i.test(f)?f+'.':'We will '+f.charAt(0).toLowerCase()+f.slice(1)+'.',220))}
   D.openIssues.slice(0,1).forEach(t=>ac.push('We will '+drShort(drFuture(t),90)+' and confirm it works end to end.'));
-  const nextOpen=D.open.filter(t=>!D.openIssues.includes(t)&&!t._r);
-  if(nextOpen.length)ac.push(drList('In '+D.next+', we will ',nextOpen.slice(0,3).map(t=>drShort(drFuture(t),60)),'.',200));
-  if(wins.some(t=>/\baudit|review/i.test(t.title)))ac.push('We will act on the audit findings, starting with the highest-impact fixes.');
+  if(pageWork)ac.push('We will continue updating existing pages and developing new ones across our websites to improve functionality, design, and user experience.');
+  if(nextOpen.length)ac.push(drList('We will advance ',nextOpen.slice(0,2).map(t=>drShort(drObj(drFuture(t).replace(/^(set up|clean up|\w+)\s+/,'')),60)),drSupport(D)?', while providing ongoing technical support to team members.':'.',220));
+  else if(drSupport(D))ac.push('We will keep providing technical support and troubleshooting assistance to team members.');
+  if(wins.some(t=>/\baudit/i.test(t.title)))ac.push('We will act on the audit findings, starting with the highest-impact fixes.');
   if(M.ch)ac.push('We will plan around the constraint above so it does not slow delivery.');
-  ac.push(mets.length?'We will keep tracking these results to confirm the trend holds.':'We will start tracking page views and sign-ups so we can measure the impact of each update.');
-  if(D.resolved.length)ac.push('We will keep testing access as a real user after each website change.');
+  ac.push(mets.length?'We will keep tracking these results to confirm the trend holds.':'We will track page views and sign-ups to measure the impact of each update.');
   const actions=drPack(ac,N.actions);
 
   /* Summary: condensed story of the sections above */
-  const outShort=[...new Set(wins.map(t=>drOutcome(t)[1]))];
+  const outShort=[...new Set(wins.map(t=>drOutcome(t).short))];
   const sm=[
     wins.length?drList('In '+D.mon+', we ',wins.map(t=>P(t,75)),'.',260):D.mon+' was a steady month for our team.',
     outShort.length?drList('Together, this work ',outShort.slice(0,3),'.',170):'',
@@ -1874,6 +1899,9 @@ function drBuild(D,M,winsIn){
   const cert=drClean(M.cert)||'No Doer University certification was attained this month. We will continue building our skills through hands-on project work.';
   return {highlight,summary,impact,working,achievements,challenges,actions,cert};
 }
+/* "strengthens X, improves Y" -> "strengthen X, improve Y" for plural subjects */
+function drPlVerb(s){return s.replace(/\b(\w+?)(ies|es|s)\b(?=\s)/g,(w,b,e,i)=>{const pre=s.slice(0,i);if(i&&!/(, |^|and )$/.test(pre))return w;
+  if(/^(gives|makes|keeps|takes|adds|builds|cuts|sets|lays|eliminates|ensures|strengthens|improves|restores|captures|speeds|reduces|encourages|guides|supports|nurtures|centralizes|moves|boosts|simplifies|smooths|sharpens|streamlines|routes|prepares|drives)$/.test(w))return e==='ies'?b+'y':w.replace(/(ch|sh|x|ss)es$/,'$1').replace(/([^aeiou])es$/,(m,c)=>/[sxz]$/.test(c)?c:c+'e').replace(/s$/,'');return w})}
 
 /* ---------- optional: write with Claude (API key stored only in this browser) ---------- */
 const DR_MODEL_DEFAULT='claude-sonnet-5-5';
@@ -1890,6 +1918,7 @@ RULES
 - Build the whole report around the tasks marked key_win:true. They are the month's real accomplishments. Name them specifically (project, page and course names from the titles, details from the notes).
 - Tasks marked routine_weekly:true (e.g. adding the weekly newsletter to the website, repurposing it to the blog) are routine upkeep, NOT highlights. Never put them in Highlights, never lead Impact or Summary with them. Mention them at most once, briefly, near the end of Achievements or Summary.
 - Do not claim the month "centered on" or "focused on" anything that is not a key win.
+- Never repeat the same benefit phrase twice (e.g. do not say "removes a blocker" for several items). Each item gets its own specific benefit, like "strengthens email authentication and improves deliverability" or "ensures smooth transitions throughout the funnel".
 - For every key win, explain the concrete business outcome it creates (e.g. clearer message for visitors, fewer support requests, faster planning), specific to that work. No generic filler.
 - A task marked Done whose notes describe a problem means the problem was RESOLVED. Report it as solved (it can appear in Challenges as an obstacle we overcame, stating it was resolved).
 - Separate outputs (what we built/did) from outcomes (what changed because of it).
@@ -1903,7 +1932,7 @@ RULES
   actions: specific next steps for ${D.next} that address the challenges, open work and opportunities. Max 300 characters.
 - Character limits count every letter, space and punctuation mark. Stay safely under each limit. Plain text, no markdown, no bullet symbols, no emojis.
 ${mets.length?'\nMEASURED RESULTS PROVIDED BY US:\n'+mets.join('\n'):'\nNo traffic/conversion metrics were provided; do not invent any.'}
-${M.ch?'\nCONSTRAINT TO MENTION: '+M.ch:''}
+${M.ch?'\nCONSTRAINT TO MENTION: '+M.ch:''}${M.next?'\nNEXT MONTH FOCUS (use in Action Items): '+M.next:''}
 
 TASKS (JSON):
 ${JSON.stringify(rows)}
@@ -1925,11 +1954,197 @@ async function drAI(D,M,info,key,model,wins){
   return R;
 }
 
+/* ================= Build & Maintain chart (Jotform) =================
+   Every box on the form, in form order: [stage, group, side(B/M), label, match(text) ].
+   A box is suggested when a DONE task this month matches it. Text = title + notes. */
+const BM_LANDING=/landing|funnel|sales page|opt-?in page|squeeze/i;
+const BM_SALES=/sales|consult|discovery|strategy call/i;
+const BM_COACH=/coaching|client call|course portal|student/i;
+const BM=[
+ ['Attract Traffic','Social Media','B','Complete Business Research',x=>/business research/i.test(x)],
+ ['Attract Traffic','Social Media','B','Complete Competitor Research',x=>/competitor research/i.test(x)&&!/blog/i.test(x)],
+ ['Attract Traffic','Social Media','B','Complete Market Research',x=>/market research/i.test(x)&&!/survey/i.test(x)],
+ ['Attract Traffic','Social Media','B','Complete Trend Research',x=>/trend research/i.test(x)&&!/ongoing/i.test(x)],
+ ['Attract Traffic','Social Media','B','Setup Social Media Profiles',x=>/set ?up.*(social|instagram|facebook|tiktok|youtube|pinterest).*(profile|account|page)/i.test(x)],
+ ['Attract Traffic','Social Media','B','Design and upload banners/profile images',x=>/(banner|profile (image|photo|picture)|cover (photo|image))/i.test(x)&&/(social|instagram|facebook|linkedin|youtube|tiktok|profile)/i.test(x)&&!/facebook group/i.test(x)],
+ ['Attract Traffic','Social Media','B','Create a 90-Day Social Media Content Calendar',x=>/(90.?day|social).*content calendar|content calendar.*social/i.test(x)],
+ ['Attract Traffic','Social Media','M','Collating Quote for Social Media',x=>/quote/i.test(x)&&/social|instagram|facebook|post/i.test(x)],
+ ['Attract Traffic','Social Media','M','Designing Social Media Images',x=>/(social|instagram|facebook|\big\b|linkedin|pinterest).*(image|graphic|post design|carousel)|(image|graphic|carousel).*(social|instagram|facebook)/i.test(x)],
+ ['Attract Traffic','Social Media','M','Creating Reels',x=>/\breels?\b|short.?form video|tiktok video/i.test(x)],
+ ['Attract Traffic','Social Media','M','Captions creation',x=>/caption/i.test(x)],
+ ['Attract Traffic','Social Media','M','Ongoing Social Media posting',x=>/(post(ed|ing)?|schedul\w*|publish\w*).*(social|instagram|facebook|\big\b|tiktok|pinterest)/i.test(x)&&!/facebook group/i.test(x)],
+ ['Attract Traffic','Social Media','M','Ongoing Trend Research',x=>/ongoing trend|trend(s|ing)? (research|check)/i.test(x)&&/ongoing|weekly/i.test(x)],
+ ['Attract Traffic','Social Media','M','Monitor and engage with Social Media comments',x=>/(comment|engag).*(social|instagram|facebook|tiktok)/i.test(x)&&!/group/i.test(x)],
+ ['Attract Traffic','Social Media','M','Respond to direct messages on social profiles',x=>/\bdms?\b|direct message/i.test(x)],
+ ['Attract Traffic','Social Media','M','Ongoing Social Listening',x=>/social listening/i.test(x)],
+ ['Attract Traffic','Social Media','M','Report on Social Media Metrics',x=>/(social|instagram|facebook).*(metric|report|analytics|insight)/i.test(x)],
+ ['Attract Traffic','Social Media','M','Report on Research Results',x=>/research (result|report|summary)/i.test(x)],
+ ['Attract Traffic','Administration Support','B','Create Market Research Surveys',x=>/(market research|customer) survey/i.test(x)&&!/feedback/i.test(x)&&!/report/i.test(x)],
+ ['Attract Traffic','Administration Support','M','Report on Surveys',x=>/report.*survey|survey (result|report)/i.test(x)&&!/feedback/i.test(x)],
+ ['Attract Traffic','Blogging','B','Complete Blog Competitor Research',x=>/blog.*competitor|competitor.*blog/i.test(x)],
+ ['Attract Traffic','Blogging','B','Build Blog structure',x=>/blog (structure|categor|layout|template|setup|set up)|set ?up.*blog/i.test(x)],
+ ['Attract Traffic','Blogging','B','Create Blog copy drafts using AI',x=>/(draft|write|wrote|copy).*blog|blog (draft|copy|article)/i.test(x)&&!/repurpos/i.test(x)],
+ ['Attract Traffic','Blogging','B','Design Blog pages',x=>/design.*blog (page|layout)|blog page (design|layout)|redesign.*blog/i.test(x)],
+ ['Attract Traffic','Blogging','B','Create a 12-Week Blog Content Calendar',x=>/blog.*calendar/i.test(x)],
+ ['Attract Traffic','Blogging','M','Ongoing Blog posting',x=>/\bblog\b|repurpos/i.test(x)&&!/structure|calendar|competitor|metric|comment|design/i.test(x)],
+ ['Attract Traffic','Blogging','M','Monitor and engage with Blog comment',x=>/blog comment/i.test(x)],
+ ['Attract Traffic','Blogging','M','Report on Blog Metrics',x=>/blog.*(metric|analytics|report|traffic)/i.test(x)],
+
+ ['Capture Leads','Marketing Design','B','Create Lead Magnets',x=>/lead magnet|freebie|free (guide|download|checklist)|opt-?in (gift|freebie)/i.test(x)],
+ ['Capture Leads','Marketing Funnels','B','Build Lead Capture Funnel',x=>(/(lead (capture|gen\w*)|opt-?in|squeeze|freebie|webinar|waitlist|registration) (funnel|page)/i.test(x)&&/build|creat|set ?up|new/i.test(x))||(/^(build|built|create|created|set ?up|launch\w*)\b.*landing page/i.test(x)&&!/sales|product|checkout/i.test(x))],
+ ['Capture Leads','Marketing Funnels','B','Build Consult Funnel',x=>/consult\w* funnel|discovery call funnel|booking funnel/i.test(x)],
+ ['Capture Leads','Marketing Funnels','B','Build Application Funnel',x=>/application funnel/i.test(x)],
+ ['Capture Leads','Marketing Funnels','B','Create Landing Page copy draftsusing AI',x=>BM_LANDING.test(x)&&/(draft|wrote|write|chatgpt|\bai\b).*(copy|text)|(copy|text).*(draft|chatgpt|\bai\b)/i.test(x)&&!/sales page|checkout|product/i.test(x)],
+ ['Capture Leads','Marketing Funnels','B','Apply brand colours and fonts to landing pages',x=>BM_LANDING.test(x)&&/brand|colou?r|font|styl/i.test(x)&&!/sales page|product/i.test(x)],
+ ['Capture Leads','Marketing Funnels','B','Insert videos, images, copy, opt-informs and more',x=>BM_LANDING.test(x)&&/(insert|add|upload|embed|replace).*(video|image|photo|copy|text|opt-?in|form|testimonial|section)/i.test(x)&&!/sales page|product/i.test(x)],
+ ['Capture Leads','Marketing Funnels','B','Test the funnel',x=>/(test|audit|qa|check)\w*.*(funnel|landing|form|flow|page functionality)|functionality audit/i.test(x)],
+ ['Capture Leads','Marketing Funnels','M','Report on Funnel Metrics',x=>/funnel.*(metric|report|conversion|analytics)|conversion (rate|report)/i.test(x)],
+ ['Capture Leads','Marketing Funnels','M','Update existing pages',x=>BM_LANDING.test(x)&&/updat|edit|revis|chang|fix|improv|text|copy|refresh|audit|bug/i.test(x)&&!/sales page|checkout|low.?ticket|product/i.test(x)],
+ ['Capture Leads','Website','B','Build Website structure',x=>/(site|website) (structure|map|navigation|architecture|menu)|sitemap (plan|structure)|build.*(new )?(site|website)\b/i.test(x)],
+ ['Capture Leads','Website','B','Create Website copy drafts using AI',x=>/(website|homepage|home page|about page|site) (copy|text)|copy.*(website|homepage)/i.test(x)&&!BM_LANDING.test(x)],
+ ['Capture Leads','Website','B','Design Website pages',x=>/(design|redesign|custom code|animation|visual|mock ?up|layout)\w*.*(page|site|website|homepage)|(page|site|website|homepage).*(design|custom code|animation|visual)/i.test(x)&&!/blog page|portal/i.test(x)],
+ ['Capture Leads','Website','B','Set up contact/opt-in forms',x=>/(contact|opt-?in|sign-?up|newsletter|enquiry|inquiry) form|form (setup|set up)/i.test(x)],
+ ['Capture Leads','Website','B','Set up pop-ups',x=>/pop-?up/i.test(x)],
+ ['Capture Leads','Website','B','Integrate calendars & CRMs',x=>/integrat\w*.*(calendar|crm|calendly|hubspot|kit|convertkit|mailchimp)|crm integrat/i.test(x)&&!BM_SALES.test(x)&&!BM_COACH.test(x)],
+ ['Capture Leads','Website','B','Basic SEO',x=>/basic seo|seo (setup|set up)|initial seo|(set ?up|submit).*(search console|sitemap)/i.test(x)],
+ ['Capture Leads','Website','M','Create new pages',x=>/(creat|build|add|built|new)\w*\b.*\bpage\b/i.test(x)&&!BM_LANDING.test(x)&&!/blog|portal|facebook/i.test(x)],
+ ['Capture Leads','Website','M','Update existing page',x=>/(updat|edit|revis|chang|fix|improv|refresh|add)\w*.*(page|website|site|homepage|menu|footer|header|newsletter)/i.test(x)&&!BM_LANDING.test(x)&&!/portal|blog post|course/i.test(x)||/website newsletter|newsletter page/i.test(x)],
+ ['Capture Leads','Website','M','Ongoing SEO',x=>/\bseo\b|meta (title|desc)|keyword|alt text|search console|schema|sitemap/i.test(x)&&!/basic seo|seo setup|initial seo/i.test(x)],
+ ['Capture Leads','Social Media','B','Optimize LinkedIn Profile',x=>/linkedin profile/i.test(x)],
+ ['Capture Leads','Social Media','B','Optimize existing LinkedIn Content',x=>/optimi[sz]\w*.*linkedin (content|post)/i.test(x)],
+ ['Capture Leads','Social Media','B','Complete LinkedIn Research',x=>/linkedin research/i.test(x)],
+ ['Capture Leads','Social Media','B','Create LinkedIn Lead Generation Tracker',x=>/linkedin.*tracker/i.test(x)],
+ ['Capture Leads','Social Media','B','Complete LinkedIn Outreach template messages',x=>/linkedin.*(template|outreach message|script)/i.test(x)],
+ ['Capture Leads','Social Media','B','Complete Facebook Group Research',x=>/facebook group research/i.test(x)],
+ ['Capture Leads','Social Media','B','Create Facebook Group Lead Generation Tracker',x=>/facebook group.*tracker/i.test(x)],
+ ['Capture Leads','Social Media','M','Ongoing LinkedIn lead outreach',x=>/linkedin.*outreach/i.test(x)&&!/template/i.test(x)],
+ ['Capture Leads','Social Media','M','Ongoing LinkedIn lead generation tracking',x=>/linkedin.*(lead tracking|tracking)/i.test(x)],
+ ['Capture Leads','Social Media','M','Ongoing LinkedIn content creation',x=>/linkedin (post|content)/i.test(x)&&!/optimi/i.test(x)],
+ ['Capture Leads','Social Media','M','Ongoing Facebook Group lead research',x=>/facebook group.*lead/i.test(x)&&!/tracker|tracking/i.test(x)],
+ ['Capture Leads','Social Media','M','Ongoing Facebook Group lead generation tracking',x=>/facebook group.*tracking/i.test(x)],
+
+ ['Nurture Relationships','Email Marketing','B','Create Email nurture drafts using AI',x=>/nurture.*(draft|copy)|(draft|copy).*nurture/i.test(x)&&!BM_SALES.test(x)&&!/upsell/i.test(x)],
+ ['Nurture Relationships','Email Marketing','B','Build automated Lead Nurture Emails',x=>/(lead )?nurture (email|sequence)|welcome (email )?sequence|automat\w* (email|sequence)/i.test(x)&&!BM_SALES.test(x)&&!/upsell|client/i.test(x)],
+ ['Nurture Relationships','Email Marketing','B','Create newsletter drafts using AI',x=>/newsletter (draft|copy)|(draft|write|wrote)\w*.*newsletter/i.test(x)],
+ ['Nurture Relationships','Email Marketing','M','Send weekly newsletter',x=>/(send|sent|schedul\w*|email\w*) .*newsletter|newsletter (send|blast|email)/i.test(x)],
+ ['Nurture Relationships','Email Marketing','M','Report on Email Metrics',x=>/(email|newsletter).*(metric|open rate|click rate|report|analytics)/i.test(x)],
+ ['Nurture Relationships','Social Media','B','Creating Facebook Group to nurture prospects',x=>/(creat|set ?up)\w*.*facebook group/i.test(x)&&!/member|student|client/i.test(x)],
+ ['Nurture Relationships','Social Media','B','Design banner/graphics',x=>/facebook group.*(banner|graphic|cover)/i.test(x)&&!/member|student/i.test(x)],
+ ['Nurture Relationships','Social Media','B','Add welcome post',x=>/welcome post/i.test(x)&&!/member|student/i.test(x)],
+ ['Nurture Relationships','Social Media','B','Housekeeping/description',x=>/group (description|rules|housekeeping)/i.test(x)&&!/member|student/i.test(x)],
+ ['Nurture Relationships','Social Media','B','Setup membership questions',x=>/membership questions/i.test(x)&&!/member group|student/i.test(x)],
+ ['Nurture Relationships','Social Media','M','Schedule content',x=>/schedul\w*.*(group|facebook group)/i.test(x)&&!/member|student/i.test(x)],
+ ['Nurture Relationships','Social Media','M','Moderate posts and comments',x=>/moderat/i.test(x)],
+ ['Nurture Relationships','Social Media','M','Approve/reject new members',x=>/approv\w*.*member|new members/i.test(x)&&!/student/i.test(x)],
+ ['Nurture Relationships','Administration Support','B','Set up inbox management processes',x=>/inbox (management|process|setup|organi)|email (management|filters|labels)/i.test(x)],
+ ['Nurture Relationships','Administration Support','B','Create saved reply library',x=>/saved repl|canned repl|email template/i.test(x)&&!/update|add to/i.test(x)],
+ ['Nurture Relationships','Administration Support','M','Reply to 70-90% of incoming emails',x=>/repl(y|ied|ies) .*(email|inbox)|inbox (zero|management)|respond\w* .*email/i.test(x)],
+ ['Nurture Relationships','Administration Support','M','Update and add to saved replies',x=>/(updat|add)\w*.*saved repl/i.test(x)],
+
+ ['Convert To Cash','Administration Support','B','Setup online calendar for Sales Consults',x=>/(calendar|calendly|booking)/i.test(x)&&BM_SALES.test(x)&&/set ?up|creat|build/i.test(x)],
+ ['Convert To Cash','Administration Support','B','Integrate online calendar with CRM',x=>/calendar.*crm|crm.*calendar/i.test(x)],
+ ['Convert To Cash','Administration Support','B',"Integrate online calendar with Founder's calendar",x=>/integrat\w*.*(founder|google) calendar|calendar sync/i.test(x)&&!BM_COACH.test(x)],
+ ['Convert To Cash','Administration Support','B','Create online calendar email reminders',x=>/(calendar|booking|appointment) (email )?reminder/i.test(x)&&!BM_COACH.test(x)],
+ ['Convert To Cash','Administration Support','B','Embed online calendar (website/landing page)',x=>/embed\w*.*calendar|calendar.*embed/i.test(x)&&!/portal|course/i.test(x)],
+ ['Convert To Cash','Administration Support','B','Create Virtual Meetings for Sales Consults',x=>/(zoom|meet|virtual meeting).*(sales|consult)/i.test(x)],
+ ['Convert To Cash','Administration Support','B','Create Sales Call Application Form',x=>/application form/i.test(x)&&!/manage|result/i.test(x)],
+ ['Convert To Cash','Administration Support','B','Create Post Consult Tracker',x=>/post.?consult tracker/i.test(x)],
+ ['Convert To Cash','Administration Support','M','Pre-appointment reminders',x=>/pre.?appointment|appointment reminder/i.test(x)],
+ ['Convert To Cash','Administration Support','M','Meeting preparation for the Founder',x=>/meeting prep|prepar\w*.*(meeting|call) (for|with)/i.test(x)],
+ ['Convert To Cash','Administration Support','M','Scheduling appointments',x=>/schedul\w*.*(appointment|call|meeting|consult)/i.test(x)&&!BM_COACH.test(x)],
+ ['Convert To Cash','Administration Support','M','Follow-up no shows',x=>/no.?show/i.test(x)],
+ ['Convert To Cash','Administration Support','M','Attending and taking minutes',x=>/minutes|meeting notes|attend\w* .*(meeting|call)/i.test(x)],
+ ['Convert To Cash','Administration Support','M','Post appointment email follow up',x=>/(post.?appointment|after (the )?call).*follow/i.test(x)],
+ ['Convert To Cash','Administration Support','M','Manage results from thte Application form',x=>/application (form )?(result|response|submission)/i.test(x)],
+ ['Convert To Cash','Administration Support','M','Manage post consult follow-ups',x=>/post.?consult follow/i.test(x)],
+ ['Convert To Cash','Email Marketing','B','Create email copy drats using AI',x=>/(sales|consult).*(email copy|email draft)/i.test(x)],
+ ['Convert To Cash','Email Marketing','B','Build and automate a Pre-Consult email nurture',x=>/pre.?consult/i.test(x)],
+ ['Convert To Cash','Email Marketing','B','Build and automate a Post-Consult email nurture',x=>/post.?consult (email|nurture|sequence)/i.test(x)],
+ ['Convert To Cash','Email Marketing','B','Build and automate a sales email nurture',x=>/sales (email|sequence|nurture)/i.test(x)],
+ ['Convert To Cash','Marketing Funnels','B','Build Low Ticket Marketing Funnel to sell Product',x=>/low.?ticket|tripwire|product funnel/i.test(x)],
+ ['Convert To Cash','Marketing Funnels','B','Create Landing Page copy drats using AI',x=>/sales page|product page|checkout/i.test(x)&&/(draft|chatgpt|\bai\b|wrote|write).*(copy|text)/i.test(x)],
+ ['Convert To Cash','Marketing Funnels','B','Apply brand colours and fonts to landing pages',x=>/sales page|product page|checkout/i.test(x)&&/brand|colou?r|font/i.test(x)],
+ ['Convert To Cash','Marketing Funnels','B','Insert videos, images, copy, opt-in forms and more',x=>/sales page|product page|checkout/i.test(x)&&/(insert|add|upload|embed)\w*.*(video|image|copy|form|testimonial)/i.test(x)],
+ ['Convert To Cash','Marketing Funnels','B','Integrate funnel with email tool and automated nurtures',x=>/(funnel|landing|sales page|checkout).*(kit|convertkit|mailchimp|email tool|activecampaign)|integrat\w*.*funnel/i.test(x)],
+ ['Convert To Cash','Marketing Funnels','B','Integrate tool with Payment Processor',x=>/stripe|paypal|payment (processor|gateway|integration)/i.test(x)],
+ ['Convert To Cash','Marketing Funnels','B','Add products to landing pages',x=>/(add|list)\w*.*(product|offer)|pricing/i.test(x)&&/page|landing|site/i.test(x)],
+ ['Convert To Cash','Marketing Funnels','M','Update existing pages',x=>/sales page|product page|checkout|low.?ticket/i.test(x)&&/updat|edit|revis|chang|fix|improv/i.test(x)],
+
+ ['Deliver & Delight','Administration Support','B','Build Client/Coaching Call Booking Calendar',x=>/(coaching|client).*(booking|calendar)/i.test(x)&&/build|set ?up|creat/i.test(x)],
+ ['Deliver & Delight','Administration Support','B',"Integrate online calendar with Founder's calendar",x=>/integrat\w*.*calendar/i.test(x)&&BM_COACH.test(x)],
+ ['Deliver & Delight','Administration Support','B','Create online calendar email reminders',x=>/reminder/i.test(x)&&BM_COACH.test(x)],
+ ['Deliver & Delight','Administration Support','B','Embed online calendar (course portal)',x=>/embed\w*.*calendar/i.test(x)&&/portal|course/i.test(x)],
+ ['Deliver & Delight','Administration Support','B','Create Virtual Meetings for Client/Coaching Call',x=>/(zoom|meet|virtual meeting).*(client|coaching)/i.test(x)],
+ ['Deliver & Delight','Administration Support','B','Create New Client Questionnaire',x=>/questionnaire|intake form|onboarding form/i.test(x)&&!/report/i.test(x)],
+ ['Deliver & Delight','Administration Support','M','Manage, reschedule and cancel Client Calls',x=>/(reschedul|cancel)\w*.*call/i.test(x)],
+ ['Deliver & Delight','Administration Support','M','Pre-call reminders',x=>/pre.?call reminder/i.test(x)],
+ ['Deliver & Delight','Administration Support','M','Hosting Client/Coaching Calls',x=>/host\w*.*(coaching|client) call/i.test(x)],
+ ['Deliver & Delight','Administration Support','M','Client/Coaching Call live chat support',x=>/live chat/i.test(x)],
+ ['Deliver & Delight','Administration Support','M','Report on Questionnaire',x=>/questionnaire (result|report)|report.*questionnaire/i.test(x)],
+ ['Deliver & Delight','Course Portal','B','Portal settings setup',x=>/(portal|kajabi) settings?/i.test(x)],
+ ['Deliver & Delight','Course Portal','B','Add design and branding to the portal',(x,ti)=>/(portal|kajabi|course|library).*(design|brand|theme|custom code|animation|visual)|(design|brand|custom code)\w*.*(portal|kajabi)/i.test(ti)],
+ ['Deliver & Delight','Course Portal','B','Set-up initial course, modules and lessons',x=>/(set ?up|creat|build|add)\w*.*(course|module|lesson)/i.test(x)&&!/companion course bug|access|locked|update/i.test(x)],
+ ['Deliver & Delight','Course Portal','B','Domain/Subdomain setup',x=>/domain|subdomain|\bdns\b|\bspf\b|\bdkim\b|dmarc/i.test(x),'closest box for SPF/DKIM/DNS work'],
+ ['Deliver & Delight','Course Portal','B','Set-up membership levels and automation',x=>/membership (level|tier)|offer.*automat|automat\w*.*(offer|membership)/i.test(x)],
+ ['Deliver & Delight','Course Portal','B','Integrate portal with CRM/email tool',x=>/(portal|kajabi).*(crm|kit|convertkit|mailchimp|email tool)|integrat\w*.*kajabi/i.test(x)],
+ ['Deliver & Delight','Course Portal','B','Create draft lesson copy using AI',x=>/lesson (copy|draft|text)/i.test(x)],
+ ['Deliver & Delight','Course Portal','B','Create draft lesson resources',x=>/lesson resource|workbook|course (pdf|resource)/i.test(x)],
+ ['Deliver & Delight','Course Portal','B','Create new client welcome email using AI',x=>/(client|student) welcome email|welcome email/i.test(x)&&/client|student|course/i.test(x)],
+ ['Deliver & Delight','Course Portal','B','Create new client nurture email using AI',x=>/(client|student) nurture/i.test(x)],
+ ['Deliver & Delight','Course Portal','B','Edit lesson videos',x=>/(edit|cut|trim)\w*.*(lesson|course) video/i.test(x)],
+ ['Deliver & Delight','Course Portal','M','Changes to current courses',x=>/(updat|edit|chang|fix|revis|improv)\w*.*(course|lesson|module)|(course|lesson|module).*(update|bug|fix)/i.test(x)&&!/new course/i.test(x)],
+ ['Deliver & Delight','Course Portal','M','New courses launche',x=>/(launch\w*.*course|new course)/i.test(x)],
+ ['Deliver & Delight','Course Portal','M','Worksheet design',x=>/worksheet/i.test(x)],
+ ['Deliver & Delight','Course Portal','M','Module/Course title design',x=>/(module|course) (title|thumbnail|cover|banner)/i.test(x)],
+ ['Deliver & Delight','Course Portal','M','Access/Membership updates',x=>/(grant|access|offer|membership|enrol)/i.test(x)&&/course|kajabi|portal|member|library/i.test(x)],
+ ['Deliver & Delight','Course Portal','M','Troubleshooting access',x=>/(locked|access|login|library)/i.test(x)&&/(bug|issue|problem|locked|troubleshoot|not (working|showing)|error)/i.test(x)&&/course|kajabi|portal|member|library/i.test(x)],
+ ['Deliver & Delight','Course Portal','M','Editing and uploading Client/Coaching Call replays',x=>/replay|call recording/i.test(x)],
+ ['Deliver & Delight','Social Media','B','Create Facebook Group for members',x=>/facebook group/i.test(x)&&/member|student|client/i.test(x)&&/creat|set ?up/i.test(x)],
+ ['Deliver & Delight','Social Media','B','Design banner/graphics',x=>/(member|student) group.*(banner|graphic)/i.test(x)],
+ ['Deliver & Delight','Social Media','B','Add welcome post',x=>/welcome post/i.test(x)&&/member|student/i.test(x)],
+ ['Deliver & Delight','Social Media','B','Housekeeping/description',x=>/group (description|rules)/i.test(x)&&/member|student/i.test(x)],
+ ['Deliver & Delight','Social Media','B','Set up membership questions',x=>/membership questions/i.test(x)&&/member group|student/i.test(x)],
+ ['Deliver & Delight','Social Media','M','Schedule content',x=>/schedul\w*/i.test(x)&&/member group|student group/i.test(x)],
+ ['Deliver & Delight','Social Media','M','Generate posts and comments',x=>/(member|student) group.*(post|comment)/i.test(x)],
+ ['Deliver & Delight','Social Media','M','Approve/reject new members',x=>/approv\w*.*student/i.test(x)],
+
+ ['Upsell & Cross-sell','Email Marketing','B','Create Lead Magnets',x=>/upsell.*lead magnet/i.test(x)],
+ ['Upsell & Cross-sell','Email Marketing','B','Build and automate upsell email nurtures',x=>/upsell|cross.?sell/i.test(x)],
+ ['Upsell & Cross-sell','Email Marketing','B','Create newsletter copy drafts using AI',x=>/upsell.*newsletter/i.test(x)],
+ ['Upsell & Cross-sell','Email Marketing','M','Send weekly newsletters',x=>/upsell.*newsletter/i.test(x)],
+ ['Upsell & Cross-sell','Email Marketing','M','Report on Email Metrics',x=>/upsell.*(metric|report)/i.test(x)],
+
+ ['Referrals & Testimonials','Administration Support','B','Create Customer Feedback Survey',x=>/feedback (survey|form)|testimonial (form|request|survey)/i.test(x)&&!/report/i.test(x)],
+ ['Referrals & Testimonials','Administration Support','M','Report on Survey',x=>/(feedback|testimonial).*(report|result)/i.test(x)],
+];
+/* -> [{stage,group,side,label,why:[task titles]}] in form order, plus unmatched done tasks */
+function bmSuggest(D){
+  const hits=[],used=new Set();
+  BM.forEach(([stage,group,side,label,f,hint])=>{const why=D.done.filter(t=>{try{return f(t.title+' \n '+(t.notes||''),t.title)}catch(e){return false}});
+    if(why.length){hits.push({stage,group,side,label,why,hint});why.forEach(t=>used.add(t))}});
+  return {hits,none:D.done.filter(t=>!used.has(t))};
+}
+function bmText(B){const L=['BUILD & MAINTAIN CHART: TICK THESE BOXES',''];let st='',gp='';
+  B.hits.forEach(h=>{if(h.stage!==st){st=h.stage;gp='';L.push(st.toUpperCase())}const g=h.group+' / '+(h.side==='B'?'Build':'Maintain');if(g!==gp){gp=g;L.push('  '+g)}
+    L.push('    [x] '+h.label+(h.hint?' ('+h.hint+')':'')+'   <- '+h.why.slice(0,2).map(t=>drClean(t.title)).join('; ')+(h.why.length>2?' +'+(h.why.length-2)+' more':''))});
+  if(!B.hits.length)L.push('No boxes matched this month\'s completed tasks.');
+  if(B.none.length){L.push('','Not on the chart (no matching box):');B.none.forEach(t=>L.push('    - '+drClean(t.title)))}
+  return L.join('\r\n')}
+function bmHTML(B){let h='<div class="bm"><div class="bmh">Build &amp; Maintain chart: tick these boxes</div>';let st='',gp='';
+  if(!B.hits.length)h+='<div class="sub">No boxes matched this month\'s completed tasks.</div>';
+  B.hits.forEach(x=>{if(x.stage!==st){if(st)h+='</div>';st=x.stage;gp='';h+=`<div class="bms"><div class="bmst">${esc(st)}</div>`}
+    const g=x.group+' · '+(x.side==='B'?'Build':'Maintain');if(g!==gp){gp=g;h+=`<div class="bmg">${esc(g)}</div>`}
+    h+=`<div class="bmi"><span class="bmx">✓</span><div><b>${esc(x.label)}</b>${x.hint?' <span class="sub">('+esc(x.hint)+')</span>':''}<div class="sub">${x.why.slice(0,2).map(t=>esc(t.title)).join(' · ')}${x.why.length>2?' +'+(x.why.length-2)+' more':''}</div></div></div>`});
+  if(st)h+='</div>';
+  if(B.none.length)h+=`<div class="bmg" style="margin-top:8px">Not on the chart</div><div class="sub">${B.none.map(t=>esc(t.title)).join(' · ')}</div>`;
+  return h+'</div>'}
+
 function drText(D,R,info){
   const L=[];const hr='='.repeat(60);
   L.push('DONE REPORT',hr,'Date Covered: '+D.label,'Name of the Founder: '+(info.fn||''),"Founder's Email: "+(info.fe||''),'Name of the Doer: '+(info.doer||''),'');
   DR_SECT.forEach(([k,t,n])=>{L.push(t.toUpperCase()+'  ('+R[k].length+'/'+n+' characters)',R[k],'')});
   L.push('DOER UNIVERSITY CERTIFICATION ATTAINED FOR YOUR BUSINESS',R.cert,'');
+  L.push(hr,bmText(bmSuggest(D)),'');
   L.push(hr,'REFERENCE ONLY (not part of the form): tasks this report was written from','');
   const grp=(h,a)=>{if(!a.length)return;L.push(h);a.forEach(t=>L.push('- '+drClean(t.title)+(t.by?' ('+t.by+')':'')+(t.due?' · due '+t.due:'')));L.push('')};
   grp('DONE',D.done);grp('IN PROGRESS',D.prog);grp('NOT STARTED',D.todo);
@@ -1944,7 +2159,7 @@ function drDownload(name,text){
 
 const drov=$('drov');let drLast=null;
 const drPrefs=()=>{try{return JSON.parse(localStorage.getItem('drPrefs')||'{}')}catch(e){return{}}};
-const drMKeys=[['drMv','v'],['drMl','l'],['drMc','c'],['drMe','e'],['drMo','o'],['drCh','ch'],['drCert','cert']];
+const drMKeys=[['drNext','next'],['drMv','v'],['drMl','l'],['drMc','c'],['drMe','e'],['drMo','o'],['drCh','ch'],['drCert','cert']];
 function drLoadMetrics(){const k='dr_'+$('drY').value+'-'+pad(+$('drM').value+1);let o={};try{o=JSON.parse(localStorage.getItem(k)||'{}')}catch(e){}drMKeys.forEach(([id,f])=>$(id).value=o[f]||'')}
 function drReadMetrics(){const o={};drMKeys.forEach(([id,f])=>o[f]=$(id).value.trim());try{localStorage.setItem('dr_'+$('drY').value+'-'+pad(+$('drM').value+1),JSON.stringify(o))}catch(e){}return o}
 function openDR(){
@@ -1971,7 +2186,7 @@ function drRenderWins(){
 }
 function drWins(D,who){const sel=drWinSel[D.key_+'|'+who];if(!sel)return null;const order=[...D.cands,...D.routine];return order.filter(t=>sel.has(t.id))}
 function drRenderPreview(D,R,how){
-  $('drOut').innerHTML=`<div class="sub" style="margin-top:4px">Downloaded <b>Done Report - ${D.mon} ${D.y}.txt</b> · written ${how} from ${D.done.length} completed and ${D.open.length} open tasks. Edit below and press “Download edited” if you change anything.</div>`+
+  $('drOut').innerHTML=bmHTML(bmSuggest(D))+`<div class="sub" style="margin-top:12px">Downloaded <b>Done Report - ${D.mon} ${D.y}.txt</b> · written ${how} from ${D.done.length} completed and ${D.open.length} open tasks. Edit below and press “Download edited” if you change anything.</div>`+
     DR_SECT.map(([k,t,n])=>`<div class="drsec" data-k="${k}"><label>${t}<span class="drc" data-c="${k}">${R[k].length}/${n}</span></label><textarea data-dr="${k}" maxlength="${n}">${esc(R[k])}</textarea></div>`).join('')+
     `<div class="drsec" data-k="cert"><label>Doer University Certification</label><textarea data-dr="cert">${esc(R.cert)}</textarea></div>`;
   $('drOut').querySelectorAll('[data-dr]').forEach(ta=>ta.oninput=()=>{const k=ta.dataset.dr,c=$('drOut').querySelector('[data-c="'+k+'"]');if(drLast)drLast.R[k]=ta.value;if(c){const n=DR_SECT.find(s=>s[0]===k)[2];c.textContent=ta.value.length+'/'+n;c.classList.toggle('over',ta.value.length>n)}});
