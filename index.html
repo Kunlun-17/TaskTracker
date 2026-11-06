@@ -272,6 +272,7 @@ body.locked .appbar,body.locked .bnav,body.locked .drawer,body.locked .dbg{displ
 /* notes / follow-up viewer + notification dot */
 .vbtn{margin-top:8px;font-size:13px;padding:6px 12px}
 .drx summary{cursor:pointer;font-weight:600;font-size:13px}.drx>div{margin-top:8px}
+.drwins{display:grid;gap:4px;max-height:210px;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--bg)}.drw{display:flex;gap:8px;align-items:flex-start;font-size:13px;font-weight:500;color:var(--fg,inherit);margin:0;cursor:pointer}.drw input{width:auto;margin-top:3px}.drw.r{opacity:.65}.drw em{font-style:normal;font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:6px;padding:0 5px;margin-left:4px}
 .drsec{margin-top:10px}.drsec label{display:flex;justify-content:space-between;gap:8px}.drc{font-weight:500}.drc.over{color:#dc2626}
 .drsec textarea{min-height:74px;resize:vertical;line-height:1.45}.drsec[data-k=summary] textarea,.drsec[data-k=impact] textarea{min-height:120px}
 .vbody{white-space:pre-wrap;word-break:break-word;max-height:55vh;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
@@ -568,6 +569,7 @@ input:disabled,textarea:disabled{opacity:.7;cursor:not-allowed}
   <div class="g2"><div><label>Month</label><select id="drM"></select></div><div><label>Year</label><select id="drY"></select></div></div>
   <div class="g2"><div><label>Whose tasks</label><select id="drWho"></select></div><div><label>Name of the Doer</label><input type="text" id="drDoer" placeholder="Full name"></div></div>
   <div class="g2"><div><label>Name of the Founder</label><input type="text" id="drFN" placeholder="Full name"></div><div><label>Founder's email</label><input type="text" id="drFE" placeholder="founder@email.com" autocapitalize="none"></div></div>
+  <div><label>Key wins this month <span class="sub" style="font-weight:400">(the report is built around these; weekly tasks are kept to one line)</span></label><div id="drWins" class="drwins"></div></div>
   <details class="drx"><summary>Results this month <span class="sub">(optional, makes Impact measurable)</span></summary>
     <div class="sub" style="margin:6px 0 8px">Use a % change like +306% or a before/after like 1,200 to 4,872. Saved per month.</div>
     <div class="g2"><div><label>Website views / traffic</label><input type="text" id="drMv" placeholder="+306%"></div><div><label>Leads / sign-ups</label><input type="text" id="drMl" placeholder="+40% or 30 to 42"></div></div>
@@ -582,7 +584,7 @@ input:disabled,textarea:disabled{opacity:.7;cursor:not-allowed}
     <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-weight:500"><input type="checkbox" id="drUseAI" style="width:auto"> Use Claude for this report</label>
   </details>
   <div id="drOut"></div>
-  <div class="acts"><button class="btn" id="drClose">Close</button><div style="display:flex;gap:8px"><button class="btn" id="drDl" style="display:none">Download edited</button><button class="btn p" id="drGo">Generate &amp; download</button></div></div>
+  <div class="acts"><button class="btn" id="drClose">Close</button><div style="display:flex;gap:8px"><button class="btn" id="drCopy" title="Copy the tasks and all the rules, to paste into a Claude chat">Copy for Claude chat</button><button class="btn" id="drDl" style="display:none">Download edited</button><button class="btn p" id="drGo">Generate &amp; download</button></div></div>
 </div></div>
 
 <script>
@@ -1621,8 +1623,19 @@ function drList(pre,items,suf,n){items=items.filter(Boolean);for(let k=items.len
 const DR_PAST={fix:'fixed',update:'updated',add:'added',build:'built',create:'created',set:'set',setup:'set up',upload:'uploaded',publish:'published',repurpose:'repurposed',design:'designed',redesign:'redesigned',write:'wrote',rewrite:'rewrote',edit:'edited',review:'reviewed',test:'tested',troubleshoot:'troubleshot',migrate:'migrated',launch:'launched',install:'installed',connect:'connected',integrate:'integrated',optimize:'optimized',optimise:'optimised',improve:'improved',rebuild:'rebuilt',remove:'removed',replace:'replaced',check:'checked',audit:'audited',research:'researched',prepare:'prepared',schedule:'scheduled',post:'posted',send:'sent',organize:'organized',clean:'cleaned',implement:'implemented',configure:'configured',enable:'enabled',resolve:'resolved',investigate:'investigated',change:'changed',move:'moved',make:'made',draft:'drafted',finalize:'finalized',complete:'completed',grant:'granted',upgrade:'upgraded',adjust:'adjusted',align:'aligned',revise:'revised',refresh:'refreshed',restructure:'restructured',embed:'embedded',link:'linked',import:'imported',export:'exported',duplicate:'duplicated',format:'formatted',insert:'inserted',translate:'translated',record:'recorded',film:'filmed',map:'mapped',plan:'planned',document:'documented',finish:'finished',polish:'polished',streamline:'streamlined',automate:'automated',track:'tracked',monitor:'monitored',verify:'verified',debug:'debugged',restore:'restored',recreate:'recreated',reorganize:'reorganized',copy:'copied',get:'got',put:'put',pull:'pulled',push:'pushed',turn:'turned',sync:'synced',transfer:'transferred',convert:'converted',compile:'compiled',develop:'developed',code:'coded',customize:'customized',personalize:'personalized',rename:'renamed',retitle:'retitled',crop:'cropped',resize:'resized',compress:'compressed',swap:'swapped',hide:'hid',show:'showed',feature:'featured',announce:'announced',share:'shared',submit:'submitted',apply:'applied',assign:'assigned',onboard:'onboarded',train:'trained',support:'supported',help:'helped',coordinate:'coordinated',attend:'attended',meet:'met',contact:'contacted',email:'emailed',reply:'replied',respond:'responded'};
 const DR_ISSUE_T=/\b(fix|fixe[sd]|bug|issue|error|broken|troubleshoot\w*|resolv\w*|not working|locked|glitch|debug\w*|404)\b/i;
 function drTitle(t){return drClean(t.title).replace(/[.!]+$/,'')}
-function drVerb(title){const m=title.match(/^([A-Za-z]+)(\s+(?:up|out|in|over))?\b\s*(.*)$/);if(!m)return null;const v=m[1].toLowerCase();
-  if(DR_PAST[v])return{base:v+(m[2]||'').toLowerCase(),past:DR_PAST[v]+(m[2]||'').toLowerCase(),rest:m[3]};return null}
+['email','feature','film','record','map','format','link','show','turn','put','get','help','support','meet','track','code','push','pull'].forEach(w=>delete DR_PAST[w]);
+const DR_BASE=Object.fromEntries(Object.entries(DR_PAST).map(([b,p])=>[p,b]));
+const drV1=w=>{w=w.toLowerCase();if(DR_PAST[w])return {base:w,past:DR_PAST[w]};if(DR_BASE[w])return {base:DR_BASE[w],past:w};
+  if(/ing$/.test(w)){const r=w.slice(0,-3);for(const c of [r,r+'e',r.slice(0,-1)])if(DR_PAST[c])return {base:c,past:DR_PAST[c]}}return null};
+function drVerb(title){
+  const m=title.match(/^([A-Za-z]+)(\s+(?:up|out|over))?(?:\s*(?:,|and|&|\/)\s*([A-Za-z]+)(\s+(?:up|out|over))?)?\b\s*(.*)$/);if(!m)return null;
+  const v1=drV1(m[1]);if(!v1)return null;const pt1=(m[2]||'').toLowerCase();
+  const v2=m[3]&&drV1(m[3]);
+  if(v2&&/^(complete|finish|finalize|launch|publish)$/.test(v2.base))return {base:v2.base+(m[4]||'').toLowerCase(),past:v2.past+(m[4]||'').toLowerCase(),words:[[v2.base,(m[4]||'').toLowerCase()]],rest:m[5]};
+  if(v2)return {base:v1.base+pt1+' and '+v2.base+(m[4]||'').toLowerCase(),past:v1.past+pt1+' and '+v2.past+(m[4]||'').toLowerCase(),words:[[v1.base,pt1],[v2.base,(m[4]||'').toLowerCase()]],rest:m[5]};
+  const rest=title.replace(/^[A-Za-z]+(\s+(?:up|out|over))?\s*/,'');
+  return {base:v1.base+pt1,past:v1.past+pt1,words:[[v1.base,pt1]],rest};
+}
 const drObj=r=>/^(the|a|an|our|my|all|new|each|every|both|this|these|\d)\b/i.test(r)?r:'the '+r; /* add "the" to bare nouns */
 /* noun-style titles: "Music 360 Membership Launch" -> "launched the Music 360 Membership" */
 const DR_NOUNV={launch:['launched','launch'],redesign:['redesigned','redesign'],setup:['set up','set up'],'set-up':['set up','set up'],update:['updated','update'],updates:['updated','update'],migration:['migrated','migrate'],integration:['integrated','integrate'],rebuild:['rebuilt','rebuild'],cleanup:['cleaned up','clean up'],refresh:['refreshed','refresh'],revamp:['revamped','revamp'],upgrade:['upgraded','upgrade'],optimization:['optimized','optimize'],build:['built','build'],creation:['created','create'],installation:['installed','install'],implementation:['implemented','implement'],overhaul:['overhauled','overhaul']};
@@ -1631,8 +1644,10 @@ function drPast(t){const ti=drTitle(t),v=drVerb(ti);if(v)return v.past+(v.rest?'
   return (DR_ISSUE_T.test(ti)?'resolved ':'completed ')+drObj(ti)}
 function drFuture(t){const ti=drTitle(t),v=drVerb(ti);if(v)return v.base+(v.rest?' '+drObj(v.rest):'');const nt=drNounTitle(ti);if(nt)return nt.base+' '+nt.rest;return (DR_ISSUE_T.test(ti)?'resolve ':'complete ')+drObj(ti)}
 const DR_DBL=new Set(['set','get','put','plan','map','stop','ship','run','cut','swap','crop','hit','log','tag','chat','drop','sit']);
-function drGer(t){const ti=drTitle(t),v=drVerb(ti);if(!v)return 'Our work on '+drObj(ti);const [b,...r]=v.base.split(' ');
-  const g=DR_DBL.has(b)?b+b.slice(-1)+'ing':/[^e]e$/.test(b)?b.slice(0,-1)+'ing':b+'ing';return drCap([g,...r].join(' ')+(v.rest?' '+drObj(v.rest):''))}
+function drGer(t){const ti=drTitle(t),v=drVerb(ti);
+  const ger=b=>DR_DBL.has(b)?b+b.slice(-1)+'ing':/[^e]e$/.test(b)&&b!=='be'?b.slice(0,-1)+'ing':b+'ing';
+  if(!v){const nt=drNounTitle(ti);if(nt)return drCap(ger(nt.base.split(' ')[0])+(nt.base.includes(' ')?' '+nt.base.split(' ').slice(1).join(' '):'')+' '+nt.rest);return (DR_ISSUE_T.test(ti)?'Resolving ':'Completing ')+drObj(ti)}
+  return drCap(v.words.map(([b,pt])=>ger(b)+pt).join(' and ')+(v.rest?' '+drObj(v.rest):''))}
 const drShort=(s,n=70)=>drCut(s,n);
 
 /* ---------- work streams: only what titles actually say ---------- */
@@ -1683,36 +1698,36 @@ function drProjects(list){
     .filter((k,i,a)=>!a.slice(0,i).some(x=>x.includes(k)||k.includes(x))).map(k=>({name:disp[k],n:cnt[k],key:k}));
 }
 
+/* routine = weekly/recurring work (newsletters, blog reposts, anything repeated across weeks) */
+const drRKey=s=>drClean(s).toLowerCase().replace(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\b/g,'').replace(/\b(week|wk|day|issue|no|part|ep|episode)\s*\d+\b/g,'').replace(/[#\d]+/g,'').replace(/[^a-z ]+/g,' ').replace(/\s+/g,' ').trim();
 function drData(y,m,who){
   const keys=[];let d=monday(new Date(y,m,1));if(d<new Date(y,m,1)&&d.getMonth()!==m)d=addD(d,7);
   for(;d.getMonth()===m&&d.getFullYear()===y;d=addD(d,7))keys.push(iso(d));
   const all=tasks.filter(t=>keys.includes(t.week)&&(!who||t.by===who)).sort((a,b)=>(a.created||0)-(b.created||0));
-  all.forEach(t=>{t._s=drStreamOf(t);t._p=drProblem(t)});
+  const wk={},ever={};tasks.forEach(t=>{const k=drRKey(t.title);(ever[k]=ever[k]||new Set()).add(t.week)});
+  all.forEach(t=>{const k=drRKey(t.title);(wk[k]=wk[k]||new Set()).add(t.week)});
+  all.forEach(t=>{t._s=drStreamOf(t);t._p=drProblem(t);const k=drRKey(t.title);
+    t._r=['news','blog'].includes(t._s)||(k.length>3&&(wk[k].size>=2||ever[k].size>=3))});
   const done=all.filter(t=>t.status==='done'),prog=all.filter(t=>t.status==='progress'),todo=all.filter(t=>t.status!=='done'&&t.status!=='progress');
-  const by=k=>done.filter(t=>t._s===k);
+  const key=done.filter(t=>!t._r),routine=done.filter(t=>t._r);
+  const by=k=>key.filter(t=>t._s===k);
   const txt=t=>t.title+' '+(t.notes||'')+' '+(t.followup||'');
-  const newsT=by('news'),blogFromNews=done.filter(t=>/news ?letter/i.test(txt(t))&&drRepurp(t.title)).length;
-  const S={
-    fix:by('fix'),news:newsT,blog:by('blog'),seo:by('seo'),course:by('course'),email:by('email'),auto:by('auto'),analytics:by('analytics'),
-    pagenew:by('pagenew'),page:by('page'),content:by('content'),other:by('other'),
-    kit:done.some(t=>/\bkit\b|convertkit/i.test(txt(t))&&/news ?letter/i.test(txt(t))),
-    newsPage:done.some(t=>/newsletter page/i.test(txt(t))),
-    blogFromNews,blogOnly:by('blog').filter(t=>!/news ?letter/i.test(txt(t))).length};
-  const projects=drProjects(done);
-  /* rank the "major" accomplishments: detail in notes, fixes, named projects, big verbs */
-  const BIG=/\b(launch|rebuil|rebuild|migrat|new|redesign|set ?up|integrat|build|built|creat|overhaul|restructur|v\d)/i;
-  const score=t=>(t._s==='fix'?4:0)+(t._p?2:0)+Math.min(String(t.notes||'').length/150,3)+(projects.some(p=>t.title.toLowerCase().includes(p.key))?2:0)+(BIG.test(t.title)?2:0)+(t.followup?1:0)+(getLinks(t).some(Boolean)?0.5:0)-(['news','blog'].includes(t._s)?3:0);
-  const majors=[...done].sort((a,b)=>score(b)-score(a)).filter(t=>score(t)>-1).slice(0,5);
-  const vs=[...new Set(done.flatMap(t=>(String(t.title).match(/\bv\d+(?:\.\d+)*\b/gi)||[]).map(v=>v.toLowerCase())))]
-    .sort((a,b)=>{const A=a.slice(1).split('.').map(Number),B=b.slice(1).split('.').map(Number);for(let i=0;i<Math.max(A.length,B.length);i++){if((A[i]||0)!==(B[i]||0))return (A[i]||0)-(B[i]||0)}return 0});
+  const S={fix:by('fix'),seo:by('seo'),course:by('course'),email:by('email'),auto:by('auto'),analytics:by('analytics'),pagenew:by('pagenew'),page:by('page'),content:by('content'),other:by('other'),
+    news:done.filter(t=>t._s==='news'),blog:done.filter(t=>t._s==='blog'),
+    kit:done.some(t=>/\bkit\b|convertkit/i.test(txt(t))&&/news ?letter/i.test(txt(t)))};
+  S.blogFromNews=done.filter(t=>/news ?letter/i.test(txt(t))&&drRepurp(t.title)).length;
+  S.otherRoutine=routine.filter(t=>!['news','blog'].includes(t._s));
+  const BIG=/\b(launch|rebuil|migrat|new|redesign|set ?up|integrat|build|built|creat|overhaul|restructur|audit|complete|finali[sz]e|v\d)/i;
+  const score=t=>(t._s==='fix'?3:0)+(t._p?2:0)+Math.min(String(t.notes||'').length/150,3)+(BIG.test(t.title)?2:0)+(t.followup?1:0)+(getLinks(t).some(Boolean)?0.5:0)+(t.title.length>30?0.5:0);
+  const cands=[...key].sort((a,b)=>score(b)-score(a));
+  const vs=t=>(String(t.title).match(/\bv\d+(?:\.\d+)*\b/i)||[''])[0];
   const last=iso(new Date(y,m+1,0)),today=iso(new Date()),cutoff=today<last?today:last;
   const open=all.filter(t=>t.status!=='done');
-  return {all,done,prog,todo,open,S,projects,majors,vs,
+  return {all,done,prog,todo,open,key,routine,cands,S,vs,
     overdue:open.filter(t=>t.due&&t.due<cutoff),
     resolved:done.filter(t=>t._p),openIssues:open.filter(t=>t._p),
     tested:done.some(t=>/\b(granted (?:her|him|my|our)sel(f|ves)|test (?:account|user|purchase)|as a (?:student|user|customer)|tested|own account)\b/i.test(txt(t))),
-    linked:done.filter(t=>getLinks(t).some(Boolean)).length,
-    mon:MON[m],next:MON[(m+1)%12],key:y+'-'+pad(m+1),label:MON[m].slice(0,3)+' '+y,y,total:all.length};
+    mon:MON[m],next:MON[(m+1)%12],key_:y+'-'+pad(m+1),label:MON[m].slice(0,3)+' '+y,y,total:all.length};
 }
 
 function drMetric(label,v){v=drClean(v);if(!v)return '';
@@ -1721,44 +1736,60 @@ function drMetric(label,v){v=drClean(v);if(!v)return '';
   const m=v.match(/^(.+?)\s*(?:to|→|->)\s*(.+)$/);if(m&&/\d/.test(m[1])&&/\d/.test(m[2]))return label+' moved from '+m[1]+' to '+m[2];
   return label+' reached '+v}
 
-/* quantified outputs, worded from what was really done. Tasks already named elsewhere in the
-   same sentence group are left out of the counts ("1 more website update") so nothing is double-counted. */
+/* counts of non-routine outputs not already named */
 function drOutputs(D,named){
   named=named||new Set();const S=D.S,o=[];
-  const c=k=>{const a=S[k]||[],r=a.filter(t=>!named.has(t));return {n:r.length,more:r.length<a.length?' more':''}};
-  if(S.news.length)o.push({k:'news',txt:'added '+S.news.length+' newsletter'+drS(S.news.length)+(S.kit?' from Kit':'')+' to our website'+(S.newsPage?"'s newsletter page":'')});
-  if(S.blogFromNews)o.push({k:'blog',txt:'repurposed '+(S.blogFromNews===S.news.length&&S.news.length?'all '+S.blogFromNews+' of them':S.blogFromNews+' newsletter'+drS(S.blogFromNews))+' into blog posts'});
-  if(S.blogOnly)o.push({k:'blog',txt:'published '+S.blogOnly+' blog post'+drS(S.blogOnly)});
-  const add=(k,f)=>{const x=c(k);if(x.n)o.push({k,txt:f(x.n,x.more)})};
-  add('fix',(n,m)=>'resolved '+n+m+' website/course issue'+drS(n));
-  add('pagenew',(n,m)=>'built '+n+m+' new page'+drS(n));
-  add('page',(n,m)=>'made '+n+m+' website update'+drS(n));
-  add('course',(n,m)=>'made '+n+m+' course update'+drS(n)+' in Kajabi');
-  add('seo',(n,m)=>'completed '+n+m+' SEO update'+drS(n));
-  add('email',(n,m)=>/sequence|welcome|nurture|drip/i.test(S.email.map(t=>t.title).join(' '))?'built '+n+m+' email sequence'+drS(n):'sent '+n+m+' email campaign'+drS(n));
-  add('auto',(n,m)=>'set up or updated '+n+m+' automation'+drS(n));
-  add('analytics',(n,m)=>'completed '+n+m+' tracking setup'+drS(n));
-  add('content',(n,m)=>'produced '+n+m+' content piece'+drS(n));
+  const add=(k,f)=>{const n=(S[k]||[]).filter(t=>!named.has(t)).length;if(n)o.push({k,txt:f(n)})};
+  add('fix',n=>'resolved '+n+' website/course issue'+drS(n));
+  add('pagenew',n=>'built '+n+' new page'+drS(n));
+  add('page',n=>'made '+n+' website update'+drS(n));
+  add('course',n=>'made '+n+' course update'+drS(n));
+  add('seo',n=>'completed '+n+' SEO update'+drS(n));
+  add('email',n=>/sequence|welcome|nurture|drip/i.test(S.email.map(t=>t.title).join(' '))?'built '+n+' email sequence'+drS(n):'sent '+n+' email campaign'+drS(n));
+  add('auto',n=>'set up or updated '+n+' automation'+drS(n));
+  add('analytics',n=>'completed '+n+' tracking setup'+drS(n));
+  add('content',n=>'produced '+n+' content piece'+drS(n));
   return o;
 }
+/* the weekly/routine work, in one short line */
+function drRoutine(D,form){const S=D.S,p=[];
+  if(S.news.length)p.push(S.news.length+' newsletter'+drS(S.news.length));
+  if(S.blogFromNews||S.blog.length)p.push((S.blogFromNews||S.blog.length)+' blog post'+drS(S.blogFromNews||S.blog.length));
+  if(S.otherRoutine.length)p.push(S.otherRoutine.length+' other recurring task'+drS(S.otherRoutine.length));
+  if(!p.length)return '';
+  const what=S.news.length?'weekly newsletter'+(S.blog.length||S.blogFromNews?' and blog':'')+' updates':'recurring weekly tasks';
+  return form==='short'?'Our '+what+' stayed on schedule.':'Our '+what+' stayed on schedule ('+drAnd(p)+').'}
 
-/* outcome (impact) per stream — specific to the work */
-function drImpacts(D){
-  const S=D.S,r=[];
-  if(S.news.length)r.push({k:'news',s:'Adding '+S.news.length+' newsletter'+drS(S.news.length)+' to our website'+(S.blogFromNews?' and repurposing '+(S.blogFromNews===S.news.length?'them':S.blogFromNews)+' as blog posts':'')+' keeps our site fresh with new, searchable content and gives readers who miss an email another place to find it.',short:'keeps our website fresh with new content'});
-  else if(S.blogOnly)r.push({k:'blog',s:'Publishing '+S.blogOnly+' blog post'+drS(S.blogOnly)+' adds fresh, searchable content that supports organic traffic.',short:'adds fresh, searchable content'});
-  D.resolved.filter(t=>t._s==='fix').slice(0,2).forEach(t=>{const aud=/course|kajabi|student|lesson|library/i.test(t.title+' '+t.notes)?'students':'visitors';
-    r.push({k:'fix',s:drCap(drPast(t).replace(/^(fixed|resolved|troubleshot|debugged)\s+/,'resolving '))+' removed a blocker for '+aud+', so they can reach the content without getting stuck or needing support.',short:'removes blockers for '+aud})});
-  if(S.fix.length>2)r.push({k:'fix',s:'Clearing '+S.fix.length+' issues in total made our website and course more reliable.',short:'makes our platform more reliable'});
-  if(S.pagenew.length)r.push({k:'pagenew',s:(S.pagenew.length>1?'The '+S.pagenew.length+' new pages give':'The new page gives')+' visitors clearer paths to learn about our offers and take action.',short:'gives visitors clearer paths to act'});
-  if(S.page.length)r.push({k:'page',s:(S.page.length>1?'Our '+S.page.length+' website updates keep':'Our website update keeps')+' information accurate and the site easier to navigate.',short:'keeps the website accurate'});
-  if(S.course.length)r.push({k:'course',s:(S.course.length>1?'The '+S.course.length+' course updates give':'The course update gives')+' students a smoother learning experience in Kajabi.',short:'improves the student experience'});
-  if(S.seo.length)r.push({k:'seo',s:(S.seo.length>1?'Our '+S.seo.length+' SEO updates make':'Our SEO update makes')+' our pages easier for search engines to find, supporting organic traffic over time.',short:'supports search visibility'});
-  if(S.email.length)r.push({k:'email',s:(/sequence|welcome|nurture|drip/i.test(S.email.map(t=>t.title).join(' '))?'Our email work gives new subscribers a consistent welcome and keeps them engaged.':'Our email campaigns kept our audience engaged between offers.'),short:'keeps our audience engaged'});
-  if(S.auto.length)r.push({k:'auto',s:(S.auto.length>1?'Our '+S.auto.length+' automation updates cut':'Our automation update cuts')+' manual work and speed up follow-up.',short:'cuts manual work'});
-  if(S.analytics.length)r.push({k:'analytics',s:'Better tracking gives us clearer data to guide decisions.',short:'gives us clearer data'});
-  if(S.content.length)r.push({k:'content',s:(S.content.length>1?'The '+S.content.length+' content pieces keep':'Our new content keeps')+' our brand visible to our audience.',short:'keeps our brand visible'});
-  return r;
+/* what a piece of work does for the business: [present-tense outcome, short form] */
+function drOutcome(t){const x=t.title+' '+(t.notes||''),T=t.title;
+  if(t._s==='fix'||(t._p&&t.status==='done')){const a=/course|kajabi|student|lesson|library|membership/i.test(x)?'students':/checkout|payment|buy|purchase/i.test(x)?'buyers':'visitors';
+    return ['removes a blocker for '+a+', so they get in without getting stuck or needing support','removes a blocker for '+a]}
+  if(/\baudit|review|assessment|analysis|test(ing)?\b/i.test(T))return /landing|page|site|funnel/i.test(T)
+    ?['shows us exactly which landing page features work and which need fixing, so our next changes target real gaps','shows us what to fix next']
+    :['gives us a clear, prioritized list of what to improve next','gives us a clear list of what to improve'];
+  if(/tracker|dashboard|\bsystem\b|\bsop\b|process|template|\bboard\b|planner/i.test(T))return ['gives us one clear place to plan, prioritize and follow up on work, so nothing slips through the cracks','keeps our work organized in one place'];
+  if(/(landing|sales|opt-?in|squeeze|funnel|signup|sign-up|registration) ?page|landing/i.test(T))return /text|copy|messag|headline|wording|content|cta/i.test(T)
+    ?['gives visitors a clearer, more compelling message, which supports more sign-ups','sharpens our message to visitors']
+    :['gives visitors a stronger path from interest to sign-up','strengthens our path to sign-up'];
+  if(/checkout|payment|pricing|price|offer|cart/i.test(T))return ['makes it easier for buyers to say yes and complete a purchase','makes buying easier'];
+  if(/home ?page/i.test(T))return ['strengthens first impressions for every visitor who lands on our site','strengthens first impressions'];
+  if(/course|kajabi|lesson|module|membership|portal|curriculum/i.test(T))return ['gives students a smoother, more reliable learning experience','improves the student experience'];
+  if(/\bseo\b|meta|sitemap|schema|keyword/i.test(T))return ['makes our pages easier to find on search, supporting organic traffic over time','supports search visibility'];
+  if(/automat|\bzap|integrat|webhook|workflow/i.test(T))return ['cuts manual work and makes follow-up faster and more consistent','cuts manual work'];
+  if(/e-?mail|sequence|nurture/i.test(T))return ['keeps subscribers engaged with consistent, timely messages','keeps subscribers engaged'];
+  if(/analytics|tracking|ga4|pixel/i.test(T))return ['gives us reliable data to measure what is working','gives us reliable data'];
+  if(/advent|calendar|event|webinar|launch|promo|campaign|challenge|giveaway|holiday|christmas|black friday/i.test(T))return ['sets us up for a stronger promotion and more engagement with our audience','sets up our next promotion'];
+  if(/page|website|site|menu|footer|header|form|banner/i.test(T))return ['keeps our website accurate and easier to navigate','improves our website'];
+  if(/post|reel|video|graphic|content|social/i.test(T))return ['keeps our brand visible and engaging','keeps our brand visible'];
+  return ['moves our priorities forward and keeps operations running smoothly','moves our priorities forward'];
+}
+function drInsight(t,D){const T=t.title,v=D.vs(t);
+  if(t._p&&t.status==='done')return D.tested?'Testing as a real user and logging the details in our notes helped us pinpoint issues fast.':'Documenting each issue in detail helped us troubleshoot faster.';
+  if(/\baudit|review|assessment/i.test(T))return 'Auditing before we change things lets us fix what matters most first instead of guessing.';
+  if(/tracker|dashboard|\bsystem\b|\bsop\b|template|planner/i.test(T))return 'Building our own '+(/tracker/i.test(T)?'task tracker':'system')+(v?' in versions ('+v+')':'')+' keeps priorities, owners and follow-ups visible in one place.';
+  if(/landing|sales page/i.test(T)&&/text|copy|messag|headline|wording/i.test(T))return 'Refining page copy section by section lets us sharpen our message without a full rebuild.';
+  if(v)return 'Shipping in versions ('+v+') lets us improve step by step and roll out changes safely.';
+  return '';
 }
 
 function drChallengeLine(t,n){const p=t._p;if(!p)return '';
@@ -1766,17 +1797,45 @@ function drChallengeLine(t,n){const p=t._p;if(!p)return '';
   const lead=p.prob.match(/^(the|it|this|they|our|students?|users?|customers?|visitors?|that|these|those|some)\b/i)?p.prob:'we found that '+(/^[A-Z][a-z]/.test(p.prob)?p.prob.charAt(0).toLowerCase()+p.prob.slice(1):p.prob);
   return drClip(drCap(lead)+(p.cause?', which we linked to '+p.cause:'')+'. We worked through it and resolved it this month.',n)}
 
-function drBuild(D,M){
+function drBuild(D,M,winsIn){
   const N=Object.fromEntries(DR_SECT.map(s=>[s[0],s[2]]));
-  const imps=drImpacts(D);
+  const wins=(winsIn&&winsIn.length?winsIn:D.cands.slice(0,3)).filter(t=>D.done.includes(t));
+  const others=D.cands.filter(t=>!wins.includes(t));
+  const named=new Set(wins);
   const mets=[drMetric('website views',M.v),drMetric('leads',M.l),drMetric('our conversion rate',M.c),drMetric('engagement',M.e),drClean(M.o)].filter(Boolean);
-  const majPast=D.majors.map(t=>drShort(drPast(t),80));
-  const seenM=new Set(),majNoRoutine=D.majors.filter(t=>!['news','blog'].includes(t._s)).filter(t=>{const k=drShort(drPast(t),45).toLowerCase();if(seenM.has(k))return false;seenM.add(k);return true});
-  const named=new Set(majNoRoutine.slice(0,3)),outs=drOutputs(D,named),outsAll=drOutputs(D);
-  const vtag=D.vs.length>1?D.vs[0]+'–'+D.vs[D.vs.length-1]:D.vs[0]||'';
-  const focus=[...D.projects.slice(0,2).map(p=>'the '+p.name+(/course|program/i.test(p.name)?'':D.done.some(t=>new RegExp(p.key.replace(/[^\w ]/g,'.')+' (companion )?course','i').test(t.title))?' course':'')),
-    D.S.news.length?'our website newsletter'+(D.S.blogFromNews?' and blog':''):'',D.S.fix.length&&!D.projects.length?'website and course fixes':'',
-    D.S.seo.length?'SEO':''].map(s=>drClean(s)).filter(Boolean);
+  const P=(t,n)=>drShort(drPast(t),n);
+  const outs=drOutputs(D,new Set([...wins,...others.slice(0,2)]));
+
+  /* Highlights: the key wins only, never routine work */
+  const hc=[];
+  for(let k=Math.min(3,wins.length);k>=1;k--)for(const len of [80]){const w=drAnd(wins.slice(0,k).map(t=>P(t,len)));
+    if(mets[0])hc.push('We '+w+', and '+mets[0]+'.');hc.push('We '+w+'.')}
+  for(const len of [55,40])hc.push('We '+drAnd(wins.slice(0,2).map(t=>P(t,len)))+'.');
+  if(!wins.length)hc.push(mets[0]?'In '+D.mon+', '+mets[0]+' as we kept our website and content on track.':'In '+D.mon+', we kept our website and content on track and set up next month\'s work.');
+  const highlight=drFirst(hc,N.highlight);
+
+  /* Impact = results */
+  const im=[];
+  if(mets.length)im.push(drList('Our work moved the numbers this month: ',mets,'.',300));
+  wins.forEach(t=>im.push(drGer(t).replace(/^Our work on/,'Our work on')+' '+drOutcome(t)[0]+'.'));
+  others.slice(0,2).forEach(t=>im.push(drGer(t)+' '+drOutcome(t)[0]+'.'));
+  if(D.routine.length)im.push('Our weekly '+(D.S.news.length?'newsletter and blog updates keep':'routine work keeps')+' the website active between bigger releases.');
+  if(!im.length)im.push(D.prog.length?'The impact of this month will show in '+D.next+' once we finish '+drShort(drObj(drFuture(D.prog[0]).replace(/^(set up|clean up|\w+)\s+/,'')),80)+', which is already underway.':'This month focused on groundwork, so its impact will show as we deliver in '+D.next+'.');
+  const impact=drPack(im,N.impact);
+
+  /* What's working well = insights */
+  const ww=[...new Set([...wins,...others].map(t=>drInsight(t,D)).filter(Boolean))];
+  ww.push('Planning our work week by week keeps priorities clear for both of us.');
+  if(D.S.blogFromNews)ww.push('Repurposing each '+(D.S.kit?'Kit ':'')+'newsletter into a blog post gets two uses from one piece of writing.');
+  const working=drPack(ww,N.working);
+
+  /* Achievements = deliverables & milestones */
+  const ach=[];
+  ach.push(drList('We ',wins.map(t=>P(t,75)),'.',200));
+  ach.push(drList('We also ',[...others.slice(0,2).map(t=>P(t,55)),...outs.map(o=>o.txt)],'.',160));
+  ach.push(drRoutine(D,'long'),drRoutine(D,'short'));
+  let achievements=drPack(ach,N.achievements);
+  if(!achievements)achievements='We laid the groundwork for '+D.next+"'s deliverables.";
 
   /* Challenges */
   const ch=[];
@@ -1784,70 +1843,32 @@ function drBuild(D,M){
   D.openIssues.slice(0,2).forEach(t=>ch.push(drChallengeLine(t,200)));
   D.resolved.slice(0,2).forEach(t=>ch.push(drChallengeLine(t,220)));
   if(D.overdue.length)ch.push(drList('We ran past our target date on ',D.overdue.slice(0,2).map(t=>drShort(drObj(drFuture(t).replace(/^(set up|clean up|\w+)\s+/,'')),50)),', as other priorities took precedence.',170));
-  if(D.prog.length&&!D.openIssues.length)ch.push(drShort(drGer(D.prog[0]),90)+' is still in progress and carries into '+D.next+'.');
-  if(!ch.length)ch.push('We had no major blockers this month, which let us keep a steady pace across our website and content work.');
+  const prog1=D.prog.find(t=>!D.openIssues.includes(t));
+  if(prog1)ch.push(drShort(drVerb(drTitle(prog1))?drGer(prog1):'Our work on '+drObj(drTitle(prog1)),90)+' is still in progress and carries into '+D.next+'.');
+  if(!ch.length)ch.push('We had no major blockers this month, which let us keep a steady pace across our key projects.');
   const challenges=drPack(ch,N.challenges);
 
   /* Action items */
   const ac=[];
   D.openIssues.slice(0,1).forEach(t=>ac.push('We will '+drShort(drFuture(t),90)+' and confirm it works end to end.'));
-  const nextOpen=D.open.filter(t=>!D.openIssues.includes(t));
+  const nextOpen=D.open.filter(t=>!D.openIssues.includes(t)&&!t._r);
   if(nextOpen.length)ac.push(drList('In '+D.next+', we will ',nextOpen.slice(0,3).map(t=>drShort(drFuture(t),60)),'.',200));
-  if(D.S.news.length)ac.push('We will keep adding each new '+(D.S.kit?'Kit ':'')+'newsletter to our website'+(D.S.blogFromNews?' and repurposing it for our blog':'')+'.');
+  if(wins.some(t=>/\baudit|review/i.test(t.title)))ac.push('We will act on the audit findings, starting with the highest-impact fixes.');
   if(M.ch)ac.push('We will plan around the constraint above so it does not slow delivery.');
   ac.push(mets.length?'We will keep tracking these results to confirm the trend holds.':'We will start tracking page views and sign-ups so we can measure the impact of each update.');
   if(D.resolved.length)ac.push('We will keep testing access as a real user after each website change.');
   const actions=drPack(ac,N.actions);
 
-  /* Impact = results */
-  const im=[];
-  if(mets.length)im.push(drList('Our work moved the numbers this month: ',mets,'.',300));
-  imps.forEach(x=>im.push(x.s));
-  if(D.vs.length)im.push('Shipping in versions ('+vtag+') protects the live site while we improve it.');
-  if(!im.length)im.push(D.prog.length?drList('The impact of this month will show in '+D.next+' once we finish ',D.prog.slice(0,2).map(t=>drShort(drFuture(t).replace(/^(set up|clean up|\w+)\s+/,''),60)),', which we have already started.',N.impact)||'The impact of this month will show in '+D.next+' once our in-progress work is complete.':'This month focused on groundwork, so its impact will show as we deliver in '+D.next+'.');
-  const impact=drPack(im,N.impact);
-
-  /* What's working well = insights */
-  const ww=[];
-  if(D.S.blogFromNews)ww.push('Repurposing each '+(D.S.kit?'Kit ':'')+'newsletter into a blog post gets two uses from one piece of writing and keeps our website active.');
-  else if(D.S.news.length)ww.push('Publishing every newsletter on our website builds a searchable archive of our best content.');
-  if(D.resolved.length)ww.push(D.tested?'Testing as a real user and logging details in our notes helped us pinpoint issues fast.':'Documenting each issue in detail helped us troubleshoot faster.');
-  if(D.vs.length)ww.push('Structured versioning ('+vtag+') lets us test changes and deploy safely.');
-  if(D.projects[0])ww.push('Focusing on '+D.projects[0].name+' gave the project steady momentum.');
-  ww.push('Planning our work week by week keeps priorities clear for both of us.');
-  const working=drPack(ww,N.working);
-
-  /* Achievements = deliverables & milestones */
-  const ach=[];
-  let achievements='';
-  for(let k=Math.min(3,majNoRoutine.length);k>=0&&!achievements;k--){
-    const nm=new Set(majNoRoutine.slice(0,k));const a1=k?drList('We ',majNoRoutine.slice(0,k).map(t=>drShort(drPast(t),70)),'.',200):'';
-    if(k&&!a1)continue;const rest=drOutputs(D,nm).map(o=>o.txt);if(!rest.length&&a1){achievements=a1;break}
-    const a2=drList(a1?'We also ':'We ',rest,'.',N.achievements-(a1?a1.length+1:0));if(a2)achievements=(a1?a1+' ':'')+a2}
-  if(!achievements)achievements=D.done.length?drList('We ',D.done.slice(0,3).map(t=>drShort(drPast(t),70)),'.',N.achievements)||drClip('We '+drPast(D.done[0])+'.',N.achievements)
-    :'We laid the groundwork for '+D.next+"'s deliverables.";
-
-  /* Highlights (160) */
-  const h1=majNoRoutine[0]?drPast(majNoRoutine[0]):'';
-  const o1=drOutputs(D,new Set(majNoRoutine.slice(0,1))).find(o=>['news','blog','pagenew','course','seo'].includes(o.k));
-  const highlight=drFirst([
-    h1&&o1&&mets[0]?'We '+h1+', '+o1.txt+', and '+mets[0]+'.':'',
-    h1&&o1?'We '+h1+' and '+o1.txt+'.':'',
-    h1&&mets[0]?'We '+h1+', and '+mets[0]+'.':'',
-    h1?'We '+h1+'.':'',
-    o1?'In '+D.mon+', we '+o1.txt+(mets[0]?', and '+mets[0]:'')+'.':'',
-    majPast[0]?'We '+majPast[0]+'.':'We kept our website and content moving forward in '+D.mon+'.'],N.highlight);
-
-  /* Summary (650) — condensed story of the sections, nothing new */
-  const pend=D.open.length;
+  /* Summary: condensed story of the sections above */
+  const outShort=[...new Set(wins.map(t=>drOutcome(t)[1]))];
   const sm=[
-    focus.length?drList('In '+D.mon+', our work centered on ',focus.map(f=>f.replace(/^the (.+)$/,(x,n)=>/course|newsletter|blog|project/i.test(n)?x:n)),'.',200):D.mon+' was a productive month for our team.',
-    drList('We ',majNoRoutine.slice(0,3).map(t=>drShort(drPast(t),75)),'.',260),
-    drList(majNoRoutine.length?'We also ':'We ',outs.slice(0,3).map(o=>o.txt),'.',220),
-    mets.length?drList('These updates contributed to real results: ',mets.slice(0,2),'.',150)
-      :(imps.length?drCap(drList('this work ',[...new Set(imps.map(x=>x.short))].slice(0,2),'.',150)):''),
+    wins.length?drList('In '+D.mon+', we ',wins.map(t=>P(t,75)),'.',260):D.mon+' was a steady month for our team.',
+    outShort.length?drList('Together, this work ',outShort.slice(0,3),'.',170):'',
+    others.length?drList('We also ',others.slice(0,2).map(t=>P(t,60)),'.',150):'',
+    mets.length?drList('These updates contributed to real results: ',mets.slice(0,2),'.',150):'',
     D.resolved.length?'Along the way, we worked through '+(D.resolved.length===1?(/access|locked|login|library/i.test(D.resolved[0]._p.prob)?'an access issue':'a technical issue'):D.resolved.length+' issues')+' and resolved '+(D.resolved.length===1?'it':'them')+'.':'',
-    pend?'Next month, we will carry '+(pend===1?'one open item':'our open items')+' forward, as outlined in our action items.':'See the sections below for the results and our next steps.'];
+    nextOpen.length?drList('Next, we will focus on ',nextOpen.slice(0,2).map(t=>drShort(drGer(t).charAt(0).toLowerCase()+drGer(t).slice(1),55)),'.',150):'',
+    drRoutine(D,'short')];
   const summary=drPack(sm,N.summary);
 
   const cert=drClean(M.cert)||'No Doer University certification was attained this month. We will continue building our skills through hands-on project work.';
@@ -1856,8 +1877,9 @@ function drBuild(D,M){
 
 /* ---------- optional: write with Claude (API key stored only in this browser) ---------- */
 const DR_MODEL_DEFAULT='claude-sonnet-5-5';
-function drPrompt(D,M,info){
-  const rows=D.all.map(t=>({title:drClean(t.title),status:ST[t.status]||t.status,week_of:t.week,owner:t.by||'',deadline:t.due||'',notes:drClean(t.notes).slice(0,1200),follow_up:drClean(t.followup).slice(0,600),links:getLinks(t).filter(Boolean).length}));
+function drPrompt(D,M,info,wins){
+  wins=wins||D.cands.slice(0,3);
+  const rows=D.all.map(t=>({key_win:wins.includes(t),routine_weekly:!!t._r,title:drClean(t.title),status:ST[t.status]||t.status,week_of:t.week,owner:t.by||'',deadline:t.due||'',notes:drClean(t.notes).slice(0,1200),follow_up:drClean(t.followup).slice(0,600),links:getLinks(t).filter(Boolean).length}));
   const mets=[['Website views/traffic',M.v],['Leads/sign-ups',M.l],['Conversion rate',M.c],['Engagement',M.e],['Other result',M.o]].filter(x=>drClean(x[1])).map(x=>x[0]+': '+x[1]);
   return `You are writing a monthly Done Report for ${D.mon} ${D.y} that a Doer sends to their Founder (${info.fn||'the Founder'}). Use ONLY the task data below. Never invent work, numbers, tools or results.
 
@@ -1865,7 +1887,10 @@ RULES
 - Voice: always WE / OUR / US (the Doer and Founder as one team). Never "I".
 - Never mention task-tracker statistics: no "X of Y tasks", no completion %, no "planned tasks". Those are internal tracking only.
 - Quantify real outputs only, counted from what the titles say (e.g. "added 4 newsletters from Kit to our website and repurposed 4 into blog posts"). A newsletter is NOT an email campaign. Do not call updates "page builds" unless a page was actually built.
-- Lead with the biggest, most meaningful accomplishments and name them specifically (use project/course names from the titles and details from the notes).
+- Build the whole report around the tasks marked key_win:true. They are the month's real accomplishments. Name them specifically (project, page and course names from the titles, details from the notes).
+- Tasks marked routine_weekly:true (e.g. adding the weekly newsletter to the website, repurposing it to the blog) are routine upkeep, NOT highlights. Never put them in Highlights, never lead Impact or Summary with them. Mention them at most once, briefly, near the end of Achievements or Summary.
+- Do not claim the month "centered on" or "focused on" anything that is not a key win.
+- For every key win, explain the concrete business outcome it creates (e.g. clearer message for visitors, fewer support requests, faster planning), specific to that work. No generic filler.
 - A task marked Done whose notes describe a problem means the problem was RESOLVED. Report it as solved (it can appear in Challenges as an obstacle we overcame, stating it was resolved).
 - Separate outputs (what we built/did) from outcomes (what changed because of it).
 - Sections must not repeat each other:
@@ -1885,12 +1910,12 @@ ${JSON.stringify(rows)}
 
 Reply with ONLY a JSON object with string keys: highlight, summary, impact, working, achievements, challenges, actions.`;
 }
-async function drAI(D,M,info,key,model){
+async function drAI(D,M,info,key,model,wins){
   const call=async msgs=>{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:model||DR_MODEL_DEFAULT,max_tokens:2500,messages:msgs})});
     const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error((j.error&&j.error.message)||('HTTP '+r.status));
     const t=(j.content||[]).map(c=>c.text||'').join('');const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a<0)throw new Error('No report returned');return {raw:t,obj:JSON.parse(t.slice(a,b+1))}};
-  const msgs=[{role:'user',content:drPrompt(D,M,info)}];
+  const msgs=[{role:'user',content:drPrompt(D,M,info,wins)}];
   let {raw,obj}=await call(msgs);
   const over=()=>DR_SECT.filter(([k,,n])=>drClean(obj[k]).length>n);
   if(over().length){msgs.push({role:'assistant',content:raw},{role:'user',content:'These sections are over their character limits: '+over().map(([k,,n])=>k+' is '+drClean(obj[k]).length+'/'+n).join(', ')+'. Shorten only those, keep the rest identical, and reply with the full JSON again.'});
@@ -1932,9 +1957,19 @@ function openDR(){
   const pr=drPrefs();$('drFN').value=pr.fn||'';$('drFE').value=pr.fe||'';$('drDoer').value=pr.doer||me.name||'';
   let ai={};try{ai=JSON.parse(localStorage.getItem('drAI')||'{}')}catch(e){}
   $('drKey').value=ai.key||'';$('drModel').value=ai.model||DR_MODEL_DEFAULT;$('drUseAI').checked=!!ai.key&&ai.use!==false;
-  enhanceAll();drLoadMetrics();$('drOut').innerHTML='';$('drDl').style.display='none';drLast=null;
+  enhanceAll();drLoadMetrics();drRenderWins();$('drOut').innerHTML='';$('drDl').style.display='none';drLast=null;
   drov.classList.add('show');
 }
+let drWinSel={};
+function drRenderWins(){
+  const y=+$('drY').value,m=+$('drM').value,who=$('drWho').value,D=drData(y,m,who),box=$('drWins');
+  if(!D.done.length){box.innerHTML='<div class="sub">No completed tasks in this month yet.</div>';return}
+  const k=D.key_+'|'+who;if(!drWinSel[k])drWinSel[k]=new Set(D.cands.slice(0,3).map(t=>t.id));
+  const sel=drWinSel[k],row=(t,r)=>`<label class="drw${r?' r':''}"><input type="checkbox" data-win="${esc(t.id)}" ${sel.has(t.id)?'checked':''}><span>${esc(t.title)}${r?' <em>weekly</em>':''}</span></label>`;
+  box.innerHTML=D.cands.map(t=>row(t,0)).join('')+D.routine.map(t=>row(t,1)).join('');
+  box.querySelectorAll('[data-win]').forEach(c=>c.onchange=()=>{c.checked?sel.add(c.dataset.win):sel.delete(c.dataset.win)});
+}
+function drWins(D,who){const sel=drWinSel[D.key_+'|'+who];if(!sel)return null;const order=[...D.cands,...D.routine];return order.filter(t=>sel.has(t.id))}
 function drRenderPreview(D,R,how){
   $('drOut').innerHTML=`<div class="sub" style="margin-top:4px">Downloaded <b>Done Report - ${D.mon} ${D.y}.txt</b> · written ${how} from ${D.done.length} completed and ${D.open.length} open tasks. Edit below and press “Download edited” if you change anything.</div>`+
     DR_SECT.map(([k,t,n])=>`<div class="drsec" data-k="${k}"><label>${t}<span class="drc" data-c="${k}">${R[k].length}/${n}</span></label><textarea data-dr="${k}" maxlength="${n}">${esc(R[k])}</textarea></div>`).join('')+
@@ -1946,25 +1981,35 @@ $('drBtn').onclick=openDR;
 $('drClose').onclick=()=>drov.classList.remove('show');
 drov.onclick=e=>{if(e.target===drov)drov.classList.remove('show')};
 addEventListener('keydown',e=>{if(e.key==='Escape')drov.classList.remove('show')});
-$('drM').onchange=$('drY').onchange=drLoadMetrics;
-$('drWho').onchange=()=>{if($('drWho').value)$('drDoer').value=$('drWho').value};
+$('drM').onchange=$('drY').onchange=()=>{drLoadMetrics();drRenderWins()};
+$('drWho').onchange=()=>{if($('drWho').value)$('drDoer').value=$('drWho').value;drRenderWins()};
 $('drKey').oninput=()=>{if($('drKey').value.trim())$('drUseAI').checked=true};
 $('drGo').onclick=async()=>{
   if(!isSuper())return;
   const y=+$('drY').value,m=+$('drM').value,who=$('drWho').value;
   const D=drData(y,m,who);
   if(!D.total){$('drOut').innerHTML=`<div class="sub" style="color:#dc2626;margin-top:6px">No tasks found for ${MON[m]} ${y}${who?' for '+esc(who):''}. Pick another month.</div>`;$('drDl').style.display='none';return}
+  const wins=drWins(D,who);
   const M=drReadMetrics(),info=drInfo(),key=$('drKey').value.trim(),model=$('drModel').value.trim()||DR_MODEL_DEFAULT,useAI=$('drUseAI').checked&&!!key;
   try{localStorage.setItem('drAI',JSON.stringify({key,model,use:$('drUseAI').checked}))}catch(e){}
   let R,how='from your tasks',note='';
   if(useAI){const b=$('drGo');b.disabled=true;b.textContent='Writing with Claude…';
-    try{R=await drAI(D,M,info,key,model);how='by Claude'}catch(e){note=`<div class="sub" style="color:#dc2626;margin-top:6px">Claude could not write it (${esc(e.message)}), so we used the built-in writer instead.</div>`}
+    try{R=await drAI(D,M,info,key,model,wins);how='by Claude'}catch(e){note=`<div class="sub" style="color:#dc2626;margin-top:6px">Claude could not write it (${esc(e.message)}), so we used the built-in writer instead.</div>`}
     b.disabled=false;b.textContent='Generate & download'}
-  if(!R)R=drBuild(D,M);
+  if(!R)R=drBuild(D,M,wins);
   drLast={D,R};drDownload('Done Report - '+D.mon+' '+D.y+'.txt',drText(D,R,info));
   drRenderPreview(D,R,how);if(note)$('drOut').insertAdjacentHTML('afterbegin',note);$('drDl').style.display='';
 };
 $('drDl').onclick=()=>{if(!drLast)return;drDownload('Done Report - '+drLast.D.mon+' '+drLast.D.y+'.txt',drText(drLast.D,drLast.R,drInfo()))};
+
+$('drCopy').onclick=async()=>{
+  const y=+$('drY').value,m=+$('drM').value,who=$('drWho').value,D=drData(y,m,who);
+  if(!D.total){$('drOut').innerHTML='<div class="sub" style="color:#dc2626;margin-top:6px">No tasks found for this month.</div>';return}
+  const txt=drPrompt(D,drReadMetrics(),drInfo(),drWins(D,who)).replace('Reply with ONLY a JSON object with string keys: highlight, summary, impact, working, achievements, challenges, actions.','Reply with the seven sections as plain text under these headings: Highlights of the Month, Summary, Impact to Your Business, What\'s Been Working Well, Achievements, Challenges, Action Items. Put the character count after each heading, e.g. (152/160).');
+  let ok=false;try{await navigator.clipboard.writeText(txt);ok=true}catch(e){}
+  if(!ok){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy')}catch(e){}ta.remove()}
+  $('drOut').innerHTML='<div class="sub" style="margin-top:6px;color:var(--done)">'+(ok?'Copied. Paste it into a chat with Claude (claude.ai) and it will write the report following all the rules.':'Could not copy automatically.')+'</div>';
+};
 /* start */
 (async function boot(){
   try{
